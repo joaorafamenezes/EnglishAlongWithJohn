@@ -1,0 +1,26 @@
+name: iOS & Swift Unit Tests
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    name: Run Unit Tests on macOS
+    runs-on: macos-14  # Apple Silicon (M1/M2) com macOS e Xcode oficial
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Exibir Versão do Swift e Xcode
+        run: |
+          echo "=== Versão do Swift ==="
+          swift --version
+          echo "=== Versão do Xcode ==="
+          xcodebuild -version
+
+      - name: Executar Suíte de Testes Automatizados (Swift Testing)
+        run: swift test --verbose

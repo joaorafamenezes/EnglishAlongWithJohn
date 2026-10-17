@@ -39,7 +39,7 @@ public struct ConnectorsHubView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
         .navigationTitle("Prática de Conectivos")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -83,7 +83,7 @@ public struct ConnectorsHubView: View {
                             .fontWeight(.semibold)
                     }
                     .padding(8)
-                    .background(Color(.secondarySystemGroupedBackground))
+                    .background(Color.appCardBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
@@ -101,7 +101,7 @@ public struct ConnectorsHubView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 
@@ -163,7 +163,7 @@ public struct ConnectorsHubView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, minHeight: 125, alignment: .topLeading)
-            .background(isSelected ? color : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? color : Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
@@ -207,7 +207,7 @@ public struct ConnectorsHubView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(isSelected ? Color.blue : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.blue : Color.appCardBackground)
             .foregroundStyle(isSelected ? .white : .primary)
             .clipShape(Capsule())
             .overlay(
@@ -253,7 +253,7 @@ public struct ConnectorsHubView: View {
                 .tint(.blue)
             }
             .padding()
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }

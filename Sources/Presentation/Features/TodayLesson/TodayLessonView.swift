@@ -45,7 +45,7 @@ public struct TodayLessonView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
     }
 
     @ViewBuilder
@@ -102,7 +102,7 @@ public struct TodayLessonView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.secondarySystemGroupedBackground))
+                .background(Color.appCardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
 
@@ -116,7 +116,7 @@ public struct TodayLessonView: View {
             }
             .padding(.vertical)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
         .refreshable {
             await viewModel.retryLoading()
         }
@@ -151,7 +151,7 @@ public struct TodayLessonView: View {
                 .font(.title3)
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal)
     }
@@ -191,7 +191,7 @@ public struct TodayLessonView: View {
             .frame(height: 36)
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
@@ -225,7 +225,7 @@ public struct TodayLessonView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     @ViewBuilder
     private var connectorsLabBannerCard: some View {
@@ -260,7 +260,7 @@ public struct TodayLessonView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
@@ -295,7 +295,7 @@ public struct TodayLessonView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
     }
 }
 

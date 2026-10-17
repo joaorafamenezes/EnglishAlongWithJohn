@@ -17,7 +17,7 @@ public struct LoginView: View {
     public var body: some View {
         ZStack {
             // Fundo estilizado com gradiente sutil
-            Color(.systemGroupedBackground)
+            Color.appBackground
                 .ignoresSafeArea()
 
             ScrollView {
@@ -105,7 +105,7 @@ public struct LoginView: View {
                     .submitLabel(.next)
             }
             .padding(14)
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
@@ -147,7 +147,7 @@ public struct LoginView: View {
                 }
             }
             .padding(14)
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
@@ -218,7 +218,7 @@ public struct LoginView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.appCardBackground)
             .foregroundStyle(.secondary)
             .clipShape(Capsule())
         }

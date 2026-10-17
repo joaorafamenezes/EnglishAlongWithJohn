@@ -5,7 +5,9 @@
 
 import SwiftUI
 
+#if !SWIFT_PACKAGE
 @main
+#endif
 struct EnglishAlongWithJohnApp: App {
     // Instanciação do Container no topo da árvore de execução (Composition Root)
     @State private var container: AppContainer = {

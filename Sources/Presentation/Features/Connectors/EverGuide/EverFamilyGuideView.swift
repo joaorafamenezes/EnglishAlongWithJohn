@@ -28,7 +28,7 @@ public struct EverFamilyGuideView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color.appBackground)
             .navigationTitle("Guia da Família -EVER")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -67,7 +67,7 @@ public struct EverFamilyGuideView: View {
             .padding(.top, 4)
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
@@ -113,7 +113,7 @@ public struct EverFamilyGuideView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

@@ -16,7 +16,7 @@ public struct ConnectorPracticeView: View {
 
     public var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            Color.appBackground
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -52,7 +52,7 @@ public struct ConnectorPracticeView: View {
                 if viewModel.isAnswered {
                     bottomActionBar
                         .padding()
-                        .background(Color(.secondarySystemGroupedBackground))
+                        .background(Color.appCardBackground)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                         .shadow(color: .black.opacity(0.06), radius: 6, y: -2)
                 }
@@ -154,7 +154,7 @@ public struct ConnectorPracticeView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
@@ -203,7 +203,7 @@ public struct ConnectorPracticeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(18)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 
@@ -266,10 +266,10 @@ public struct ConnectorPracticeView: View {
     }
 
     private func optionBackgroundColor(isSelected: Bool, isCorrect: Bool) -> Color {
-        guard viewModel.isAnswered else { return Color(.secondarySystemGroupedBackground) }
+        guard viewModel.isAnswered else { return Color.appCardBackground }
         if isCorrect { return Color.green.opacity(0.12) }
         if isSelected { return Color.red.opacity(0.12) }
-        return Color(.secondarySystemGroupedBackground)
+        return Color.appCardBackground
     }
 
     private func optionBorderColor(isSelected: Bool, isCorrect: Bool) -> Color {
@@ -366,7 +366,7 @@ public struct ConnectorPracticeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 
