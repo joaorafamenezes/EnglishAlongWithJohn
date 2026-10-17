@@ -227,6 +227,8 @@ public struct TodayLessonView: View {
         .padding()
         .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
     @ViewBuilder
     private var connectorsLabBannerCard: some View {
         VStack(spacing: 12) {

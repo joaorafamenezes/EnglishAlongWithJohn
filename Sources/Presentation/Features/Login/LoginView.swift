@@ -101,8 +101,10 @@ public struct LoginView: View {
                 TextField("Usuário (ex: admin)", text: $viewModel.username)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textContentType(.username)
                     .submitLabel(.next)
+                    #endif
             }
             .padding(14)
             .background(Color.appCardBackground)
@@ -122,8 +124,10 @@ public struct LoginView: View {
                     TextField("Senha (ex: admin)", text: $viewModel.password)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                        #if os(iOS)
                         .textContentType(.password)
                         .submitLabel(.go)
+                        #endif
                         .onSubmit {
                             Task { await viewModel.login() }
                         }
@@ -131,8 +135,10 @@ public struct LoginView: View {
                     SecureField("Senha (ex: admin)", text: $viewModel.password)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                        #if os(iOS)
                         .textContentType(.password)
                         .submitLabel(.go)
+                        #endif
                         .onSubmit {
                             Task { await viewModel.login() }
                         }
