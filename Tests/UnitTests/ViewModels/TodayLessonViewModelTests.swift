@@ -5,6 +5,7 @@
 
 import Testing
 import Foundation
+@testable import EnglishAlongWithJohn
 
 @Suite("Suíte de Testes: TodayLessonViewModel")
 @MainActor
