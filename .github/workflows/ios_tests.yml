@@ -42,3 +42,29 @@ jobs:
           xcodebuild test \
             -scheme EnglishAlongWithJohn \
             -destination "id=${{ steps.sim.outputs.id }}"
+
+      - name: Instalar XcodeGen e Gerar Projeto Xcode (.xcodeproj)
+        run: |
+          brew install xcodegen || true
+          xcodegen generate
+
+      - name: Compilar App (.app) para o Simulador iOS
+        run: |
+          xcodebuild build \
+            -project EnglishAlongWithJohn.xcodeproj \
+            -scheme EnglishAlongWithJohn \
+            -destination "id=${{ steps.sim.outputs.id }}" \
+            -configuration Debug \
+            -derivedDataPath build
+
+          echo "Compactando .app para o simulador web..."
+          cd build/Build/Products/Debug-iphonesimulator
+          zip -r ../../../../EnglishAlongWithJohn-Simulator.zip EnglishAlongWithJohn.app
+          cd ../../../..
+
+      - name: Disponibilizar App para Download (Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: EnglishAlongWithJohn-Simulator
+          path: EnglishAlongWithJohn-Simulator.zip
+          retention-days: 7
