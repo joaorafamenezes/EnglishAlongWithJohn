@@ -485,9 +485,3 @@ private extension Color {
     )
     ConnectorPracticeView(viewModel: ConnectorPracticeViewModel(session: session, repository: repo))
 }
-
-private extension ConnectorsRepository {
-    func loadSampleExercise() -> ConnectorExercise {
-        LocalConnectorsDataSource().loadExercises()[0]
-    }
-}

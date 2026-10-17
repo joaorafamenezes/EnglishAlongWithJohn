@@ -6,11 +6,11 @@
 import Foundation
 
 /// Implementação Concreta do Repositório de Conectivos com persistência local (Offline-First).
-public final class ConnectorsRepository: ConnectorsRepositoryProtocol, @unchecked Sendable {
+/// Utiliza `actor` para isolamento de estado nativo e concorrência segura em Swift 6.
+public actor ConnectorsRepository: ConnectorsRepositoryProtocol {
     private let dataSource: LocalConnectorsDataSource
     private let userDefaults: UserDefaults
     private let masteredStorageKey = "connectors_mastered_ids"
-    private let lock = NSLock()
     private var inMemoryMastered: Set<String>
 
     public init(
@@ -28,22 +28,14 @@ public final class ConnectorsRepository: ConnectorsRepositoryProtocol, @unchecke
     }
 
     public func fetchCatalog() async throws -> [Connector] {
-        lock.lock()
-        let mastered = inMemoryMastered
-        lock.unlock()
-
         let catalog = dataSource.loadCatalog()
         return catalog.map { item in
-            item.withMastered(mastered.contains(item.id))
+            item.withMastered(inMemoryMastered.contains(item.id))
         }
     }
 
     public func fetchExercises(config: SessionConfig) async throws -> [ConnectorExercise] {
         let allExercises = dataSource.loadExercises()
-
-        lock.lock()
-        let mastered = inMemoryMastered
-        lock.unlock()
 
         // 1. Filtragem por Família / Tópico
         var filtered: [ConnectorExercise]
@@ -62,7 +54,7 @@ public final class ConnectorsRepository: ConnectorsRepositoryProtocol, @unchecke
         // 2. Filtro de Dominados ("Ocultar itens dominados")
         if config.hideMastered && config.familyFilter != .everFamily {
             filtered = filtered.filter { exercise in
-                !mastered.contains(exercise.connectorId)
+                !inMemoryMastered.contains(exercise.connectorId)
             }
         }
 
@@ -77,15 +69,10 @@ public final class ConnectorsRepository: ConnectorsRepositoryProtocol, @unchecke
     }
 
     public func getMasteredIds() async throws -> Set<String> {
-        lock.lock()
-        defer { lock.unlock() }
         return inMemoryMastered
     }
 
     public func toggleMasteredId(_ id: String) async throws -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-
         let isNowMastered: Bool
         if inMemoryMastered.contains(id) {
             inMemoryMastered.remove(id)
@@ -100,11 +87,16 @@ public final class ConnectorsRepository: ConnectorsRepositoryProtocol, @unchecke
     }
 
     public func saveSessionScore(score: Int, bestStreak: Int, mode: GameMode) async throws {
-        // Persistência simplificada de métricas em UserDefaults
         let historyKey = "connectors_high_score_\(mode.rawValue)"
         let previousHigh = userDefaults.integer(forKey: historyKey)
         if score > previousHigh {
             userDefaults.set(score, forKey: historyKey)
         }
+    }
+}
+
+extension ConnectorsRepository {
+    public nonisolated func loadSampleExercise() -> ConnectorExercise {
+        LocalConnectorsDataSource().loadExercises()[0]
     }
 }
