@@ -57,14 +57,12 @@ jobs:
             -configuration Debug \
             -derivedDataPath build
 
-          echo "Compactando .app para o simulador web..."
-          cd build/Build/Products/Debug-iphonesimulator
-          zip -r ../../../../EnglishAlongWithJohn-Simulator.zip EnglishAlongWithJohn.app
-          cd ../../../..
+          echo "Preparando .app do simulador para artefato..."
+          ls -la build/Build/Products/Debug-iphonesimulator/EnglishAlongWithJohn.app
 
       - name: Disponibilizar App para Download (Artifacts)
         uses: actions/upload-artifact@v4
         with:
           name: EnglishAlongWithJohn-Simulator
-          path: EnglishAlongWithJohn-Simulator.zip
+          path: build/Build/Products/Debug-iphonesimulator/EnglishAlongWithJohn.app
           retention-days: 7
