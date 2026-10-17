@@ -30,18 +30,15 @@ jobs:
           echo "=== Versão Ativa do Xcode ==="
           xcodebuild -version
 
-      - name: Detectar Simulador iOS Disponível
+      - name: Obter ID do Simulador iOS Único
         id: sim
         run: |
-          DEVICE=$(xcrun simctl list devices 'iPhone' available | grep -E "iPhone 1[56]" | head -n 1 | sed -E 's/^[[:space:]]+//; s/ \([A-Z0-9-]+\).*$//')
-          if [ -z "$DEVICE" ]; then
-            DEVICE="iPhone 15"
-          fi
-          echo "Simulador selecionado: $DEVICE"
-          echo "device=$DEVICE" >> $GITHUB_OUTPUT
+          DEVICE_ID=$(xcrun simctl list devices 'iPhone' available | grep -oE '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}' | head -n 1)
+          echo "Simulador UUID selecionado: $DEVICE_ID"
+          echo "id=$DEVICE_ID" >> $GITHUB_OUTPUT
 
       - name: Executar Suíte de Testes no iOS Simulator
         run: |
           xcodebuild test \
             -scheme EnglishAlongWithJohn \
-            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
+            -destination "id=${{ steps.sim.outputs.id }}"
