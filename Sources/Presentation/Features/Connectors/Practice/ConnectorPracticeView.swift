@@ -441,7 +441,7 @@ public struct ConnectorPracticeView: View {
                 .clipShape(Capsule())
             }
             .padding(28)
-            .background(Color(.secondarySystemBackground).opacity(0.25))
+            .background(Color.appCardBackground.opacity(0.25))
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 24))
             .padding(24)

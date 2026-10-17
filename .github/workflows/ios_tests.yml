@@ -8,8 +8,8 @@ on:
 
 jobs:
   test:
-    name: Run Unit Tests on macOS
-    runs-on: macos-14  # Apple Silicon (M1/M2)
+    name: Run Unit Tests on iOS Simulator
+    runs-on: macos-14
 
     steps:
       - name: Checkout do Repositório
@@ -17,9 +17,6 @@ jobs:
 
       - name: Ativar Xcode 16 (Swift 6)
         run: |
-          echo "Procurando versões do Xcode instaladas..."
-          ls -d /Applications/Xcode* || true
-          
           if [ -d "/Applications/Xcode_16.2.app" ]; then
             sudo xcode-select -s /Applications/Xcode_16.2.app
           elif [ -d "/Applications/Xcode_16.1.app" ]; then
@@ -30,10 +27,21 @@ jobs:
             sudo xcode-select -s /Applications/Xcode_16.app
           fi
 
-          echo "=== Versão Ativa do Swift ==="
-          swift --version
           echo "=== Versão Ativa do Xcode ==="
           xcodebuild -version
 
-      - name: Executar Suíte de Testes Automatizados (Swift Testing)
-        run: swift test --verbose
+      - name: Detectar Simulador iOS Disponível
+        id: sim
+        run: |
+          DEVICE=$(xcrun simctl list devices 'iPhone' available | grep -E "iPhone 1[56]" | head -n 1 | sed -E 's/^[[:space:]]+//; s/ \([A-Z0-9-]+\).*$//')
+          if [ -z "$DEVICE" ]; then
+            DEVICE="iPhone 15"
+          fi
+          echo "Simulador selecionado: $DEVICE"
+          echo "device=$DEVICE" >> $GITHUB_OUTPUT
+
+      - name: Executar Suíte de Testes no iOS Simulator
+        run: |
+          xcodebuild test \
+            -scheme EnglishAlongWithJohn \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"

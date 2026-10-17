@@ -5,8 +5,7 @@ let package = Package(
     name: "EnglishAlongWithJohn",
     defaultLocalization: "pt-BR",
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14)
+        .iOS(.v17)
     ],
     products: [
         .library(
