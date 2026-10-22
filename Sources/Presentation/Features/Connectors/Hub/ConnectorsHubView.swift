@@ -19,6 +19,9 @@ public struct ConnectorsHubView: View {
                 // Header com Progresso & Apresentação
                 headerStatsView
 
+                // Modos Integrados de Conectivos: Deck dos 81 e Match Rápido
+                companionToolsSection
+
                 // Seleção de Modo: Zen vs Arcade
                 modeSelectorSection
 
@@ -299,6 +302,59 @@ public struct ConnectorsHubView: View {
         }
         .disabled(viewModel.isLoading)
         .padding(.top, 8)
+    }
+
+    @ViewBuilder
+    private var companionToolsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Estudos & Modos Complementares")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+
+            HStack(spacing: 12) {
+                NavigationLink(value: AppRoute.connectorsDeck) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Image(systemName: "rectangle.stack.fill")
+                            .font(.title2)
+                            .foregroundStyle(.blue)
+                        Text("Deck dos 81 Conectivos")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.primary)
+                        Text("Flashcards e Maestria")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.appCardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(.plain)
+
+                NavigationLink(value: AppRoute.connectorsMatch) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(.orange)
+                        Text("Match Rápido")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.primary)
+                        Text("Associação 6x6")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.appCardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
 

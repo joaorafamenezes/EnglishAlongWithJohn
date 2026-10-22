@@ -14,4 +14,9 @@ public enum AppRoute: Hashable, Sendable {
     case studentProfile
     case connectorsHub
     case connectorPractice(sessionId: UUID)
+    case connectorsDeck
+    case connectorsMatch
+    case phrasalVerbsHub
+    case everFamilyHub
+    case idiomaticExpressionsHub
 }

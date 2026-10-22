@@ -2,6 +2,9 @@
 
 Aplicativo mobile nativo em **SwiftUI** e **Swift 6.0** para iOS 17+, focado no aprendizado e fixação de conectivos da língua inglesa de forma gamificada e didática (*Gap Runner* e *EverGuide*).
 
+- 🌐 **Aplicação Web:** [connectors-in-english.vercel.app](https://connectors-in-english.vercel.app/)
+- 💻 **Repositório Base (Web):** [github.com/joaorafamenezes/englishStudyGame](https://github.com/joaorafamenezes/englishStudyGame.git)
+
 ---
 
 ## 📱 Como Executar e Testar no Windows

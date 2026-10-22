@@ -77,4 +77,19 @@ public final class TodayLessonViewModel {
     public func didTapConnectorsHub() {
         coordinator?.navigate(to: .connectorsHub)
     }
+
+    /// Dispara a navegação para o menu do jogo de Phrasal Verbs.
+    public func didTapPhrasalVerbsHub() {
+        coordinator?.navigate(to: .phrasalVerbsHub)
+    }
+
+    /// Dispara a navegação para o menu da Família -Ever & Whereas.
+    public func didTapEverFamilyHub() {
+        coordinator?.navigate(to: .everFamilyHub)
+    }
+
+    /// Dispara a navegação para o menu de Expressões Idiomáticas.
+    public func didTapIdiomaticExpressionsHub() {
+        coordinator?.navigate(to: .idiomaticExpressionsHub)
+    }
 }

@@ -81,4 +81,31 @@ struct TodayLessonViewModelTests {
         #expect(coordinator.path.count == 1)
         #expect(coordinator.path.first == .exerciseSession(lessonId: sampleLesson.id))
     }
+
+    @Test("Deve acionar a navegação no Coordinator para os 4 Menus do Sistema")
+    func testNavigationToSystemMenus() {
+        // Arrange
+        let mockRepo = MockLessonRepository()
+        let useCase = FetchTodayLessonUseCase(repository: mockRepo)
+        let coordinator = AppCoordinator()
+        let sut = TodayLessonViewModel(fetchTodayLessonUseCase: useCase, coordinator: coordinator)
+
+        // 1. Connectors Lab
+        sut.didTapConnectorsHub()
+        #expect(coordinator.path.last == .connectorsHub)
+
+        // 2. Phrasal Verbs
+        sut.didTapPhrasalVerbsHub()
+        #expect(coordinator.path.last == .phrasalVerbsHub)
+
+        // 3. Família -Ever & Whereas
+        sut.didTapEverFamilyHub()
+        #expect(coordinator.path.last == .everFamilyHub)
+
+        // 4. Expressões Idiomáticas
+        sut.didTapIdiomaticExpressionsHub()
+        #expect(coordinator.path.last == .idiomaticExpressionsHub)
+
+        #expect(coordinator.path.count == 4)
+    }
 }

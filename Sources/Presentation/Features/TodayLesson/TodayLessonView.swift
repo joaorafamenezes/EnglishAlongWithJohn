@@ -86,9 +86,8 @@ public struct TodayLessonView: View {
                 .padding(.horizontal)
 
 
-                // Laboratório de Conectivos (English Connectors Lab)
-                connectorsLabBannerCard
-                    .padding(.horizontal)
+                // Menus de Estudo e Jogos do Sistema
+                studyModulesSection
             }
             .padding(.vertical)
         }
@@ -134,33 +133,87 @@ public struct TodayLessonView: View {
 
 
     @ViewBuilder
-    private var connectorsLabBannerCard: some View {
-        VStack(spacing: 12) {
+    private var studyModulesSection: some View {
+        VStack(spacing: 16) {
+            // 1. Laboratório de Conectivos (Connectors Lab)
+            menuCard(
+                title: "Prática de Conectivos (Connectors Lab)",
+                subtitle: "Gap Runner nos modos Zen e Arcade, Deck dos 81 Conectivos e Match Rápido.",
+                icon: "sparkles.rectangle.stack.fill",
+                iconColor: .purple,
+                buttonTitle: "Abrir Laboratório de Conectivos",
+                gradient: LinearGradient(colors: [.purple, .blue], startPoint: .leading, endPoint: .trailing),
+                action: { viewModel.didTapConnectorsHub() }
+            )
+
+            // 2. Phrasal Verbs Game
+            menuCard(
+                title: "Phrasal Verbs Game",
+                subtitle: "Desafio das Frases (Quiz), Match Rápido e Deck Didático com níveis A1 a C1.",
+                icon: "figure.run.circle.fill",
+                iconColor: .orange,
+                buttonTitle: "Jogar Phrasal Verbs",
+                gradient: LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing),
+                action: { viewModel.didTapPhrasalVerbsHub() }
+            )
+
+            // 3. Família -Ever & Whereas
+            menuCard(
+                title: "Família -Ever & Whereas",
+                subtitle: "Regra de ouro, matriz comparativa e quiz de fixação para Whatever, Whenever, Wherever, Whoever, However e Whereas.",
+                icon: "key.horizontal.fill",
+                iconColor: .green,
+                buttonTitle: "Explorar Família -Ever",
+                gradient: LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing),
+                action: { viewModel.didTapEverFamilyHub() }
+            )
+
+            // 4. Expressões Idiomáticas (Idiomatic Expressions)
+            menuCard(
+                title: "Expressões Idiomáticas",
+                subtitle: "Desafio de significados reais, notas culturais e frases do cotidiano sem tradução ao pé da letra.",
+                icon: "quote.bubble.fill",
+                iconColor: .pink,
+                buttonTitle: "Praticar Expressões",
+                gradient: LinearGradient(colors: [.purple, .pink], startPoint: .leading, endPoint: .trailing),
+                action: { viewModel.didTapIdiomaticExpressionsHub() }
+            )
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private func menuCard(
+        title: String,
+        subtitle: String,
+        icon: String,
+        iconColor: Color,
+        buttonTitle: String,
+        gradient: LinearGradient,
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Prática de Conectivos (Connectors Lab)", systemImage: "sparkles.rectangle.stack.fill")
+                Label(title, systemImage: icon)
                     .font(.headline)
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(iconColor)
                 Spacer()
             }
 
-            Text("Treine conectivos sintáticos essenciais e a Família -ever nos modos Zen e Arcade.")
+            Text(subtitle)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button(action: {
-                viewModel.didTapConnectorsHub()
-            }) {
+            Button(action: action) {
                 HStack {
-                    Text("Abrir Laboratório de Conectivos")
+                    Text(buttonTitle)
                         .fontWeight(.semibold)
                     Image(systemName: "arrow.right")
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(
-                    LinearGradient(colors: [.purple, .blue], startPoint: .leading, endPoint: .trailing)
-                )
+                .background(gradient)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }

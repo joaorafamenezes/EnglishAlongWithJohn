@@ -2,13 +2,14 @@
 
 > **Documento de Governança, Arquitetura e Boas Práticas**  
 > **Plataforma:** iOS (iPhone) • **Linguagem:** Swift 6.0 • **Framework:** SwiftUI • **Target Mínimo:** iOS 17.0+  
-> **Aplicação Base:** [Connectors in English (Gap Runner)](https://connectors-in-english.vercel.app/)
+> **Aplicação Base (Web):** [Connectors in English (Gap Runner)](https://connectors-in-english.vercel.app/)  
+> **Repositório Base (GitHub):** [joaorafamenezes/englishStudyGame](https://github.com/joaorafamenezes/englishStudyGame.git)
 
 ---
 
 ## 1. Visão Geral e Propósito do Projeto
 
-Este projeto consiste na versão mobile nativa (iOS) do aplicativo web **Connectors in English (Gap Runner)**.  
+Este projeto consiste na versão mobile nativa (iOS) do aplicativo web **Connectors in English (Gap Runner)**, baseado no repositório [joaorafamenezes/englishStudyGame](https://github.com/joaorafamenezes/englishStudyGame.git) e hospedado em [connectors-in-english.vercel.app](https://connectors-in-english.vercel.app/).  
 O objetivo é capacitar estudantes de inglês a dominar o uso de conectivos gramaticais de forma didática, fluida e gamificada, combinando um catálogo detalhado de conectivos (*EverGuide*), sessões de prática com preenchimento de lacunas (*Gap Runner*) em dois modos (**Arcade** e **Zen**), feedback pedagógico aprofundado e reprodução de pronúncia/áudio.
 
 Toda funcionalidade criada no app mobile deve preservar ou aprimorar a experiência existente na versão web, adotando padrões de ponta da plataforma Apple (Human Interface Guidelines, fluid animations, dynamic type e feedback tátil).
@@ -120,43 +121,122 @@ A qualidade de software e a confiabilidade pedagógica do app são inegociáveis
 
 ---
 
-## 5. Mapeamento das Funcionalidades (Web ➔ Mobile)
+## 5. Mapeamento das Funcionalidades e Jogos (Web ➔ Mobile)
 
-As seguintes funcionalidades presentes no site `connectors-in-english.vercel.app` devem ser fielmente reproduzidas e refinadas para iOS:
+As regras e mecânicas presentes no repositório [joaorafamenezes/englishStudyGame](https://github.com/joaorafamenezes/englishStudyGame.git) e na aplicação web [connectors-in-english.vercel.app](https://connectors-in-english.vercel.app/) são organizadas no app mobile em **menus independentes e modulares** no padrão Hub:
 
-### 5.1. Prática Interativa: "Gap Runner"
-- **Fluxo do Exercício:**
-  - Sentença em destaque com lacuna visual clara (`_____`).
-  - Lista de 4 opções em formato de botões de toque com resposta háptica.
-  - Barra de progresso da sessão (ex: Questão 3 de 10).
-- **Modos de Jogo:**
-  - **Modo Arcade:**
-    - Temporizador decrescente de 18 segundos por questão com indicador visual circular ou barra animada.
-    - 3 vidas (representadas por corações); cada resposta errada ou timeout consome 1 vida com haptic de erro.
-    - Multiplicador de Streak dinâmico (x1, x2, x3...).
-    - Tela de Game Over com estatísticas ou Tela de Vitória com pontuação total e revisão.
-  - **Modo Zen:**
-    - Estudo sem pressão de tempo e sem contagem de vidas.
-    - Foco na retenção gramatical e aprendizado calmo.
-- **Gaveta / Modal de Explicação Pedagógica (Feedback Drawer):**
-  - Exibido após cada resposta:
-    - **Por que está correto:** Justificativa da regra sintática ou semântica.
-    - **Por que as outras falham:** Explicação clara do motivo de cada distrator estar incorreto.
-    - **Dica do John (Pro Tip):** Dica prática de uso real.
-    - **Tradução da frase completa:** Tradução para pt-BR.
+```
+[Tela Inicial / Menu do Sistema]
+  ├── 🟣 1. Prática de Conectivos (Connectors Lab)
+  │      ├── Gap Runner (Prática com lacunas nos modos Arcade e Zen)
+  │      ├── Deck dos 81 Conectivos (Flashcards com filtros por família e Mastery)
+  │      └── Match Rápido de Conectivos (Associação rápida em pares)
+  │
+  ├── 🟠 2. Phrasal Verbs Game
+  │      ├── Quiz das Frases (Zen e Arcade com níveis A1, A2, B1, B2, C1)
+  │      ├── Match Rápido de Phrasal Verbs (Associação 6x6)
+  │      └── Deck de Phrasal Verbs (Flashcards com áudio e dominados)
+  │
+  ├── 🎯 3. Família -Ever & Whereas
+  │      ├── Guia Didático Interativo (Whatever, Whenever, Wherever, Whoever, However, Whereas)
+  │      └── Quiz Dedicado de Fixação Sintática
+  │
+  └── 💡 4. Expressões Idiomáticas (Idiomatic Expressions)
+         ├── Desafio das Expressões (Quizzing de significados)
+         └── Guia de Expressões com Contexto Cultural e Conversação Real
+```
 
-### 5.2. Catálogo Didático: "EverGuide"
-- Listagem categorizada por famílias de conectivos:
-  - *Contrast & Concession* (Although, However, Despite, In spite of, Whereas...)
-  - *Addition* (Furthermore, Moreover, In addition, Besides...)
-  - *Cause, Reason & Purpose* (Because of, Due to, In order to, So that...)
-  - *Condition & Consequence* (Therefore, As a result, Unless, Otherwise...)
-- Detalhes de cada conectivo: tradução, regras gramaticais, notas de pontuação (ex: uso de vírgulas) e exemplos contextualizados.
-- Ação de favoritar / marcar como **"Mastered"** (Dominado).
-- Barra de busca instantânea e filtros por família gramatical.
+---
 
-### 5.3. Pronúncia e Áudio
-- Botão de áudio em cada conectivo e frase exemplo utilizando síntese de voz nativa (`AVSpeechSynthesizer`) ou arquivos de áudio remotos/locais com controle de reprodução.
+### 5.1. Prática de Conectivos (Connectors Lab)
+O laboratório central de conectivos reúne três ferramentas de estudo integradas:
+
+#### 5.1.1. Gap Runner (Prática Interativa com Lacunas)
+- **Fluxo:** Frase com lacuna visual (`_____`), 4 opções de conectivos e barra de progresso.
+- **Modos:**
+  - **Modo Arcade:** 18 segundos por questão, 3 vidas (corações), multiplicador de streak (x1, x2, x3...), perda de vida por erro ou timeout, telas de Game Over e Vitória com ranking local Top 5.
+  - **Modo Zen:** Estudo sem pressão de tempo e sem contagem de vidas; sons suaves e foco em retenção.
+- **Feedback Pedagógico Completo (Drawer/Modal):**
+  - **Por que está correto:** Justificativa da regra sintática ou semântica.
+  - **Por que as outras falham:** Explicação clara do motivo de cada distrator estar incorreto.
+  - **Dica do John (Pro Tip):** Dica prática de uso real.
+  - **Tradução:** Tradução completa da sentença em português.
+
+#### 5.1.2. Deck dos 81 Conectivos (Flashcards Interativos)
+- Integrado diretamente dentro da experiência de conectivos.
+- **Catálogo dos 81 Conectivos:** Agrupados em 10 categorias gramaticais:
+  1. *Contraste / Concessão* (Although, However, Despite, In spite of, Whereas...)
+  2. *Causa / Efeito* (Because, As a result, Hence, Therefore...)
+  3. *Condição* (If, Unless, As long as, Otherwise...)
+  4. *Adição* (Along with, As well as, Besides, Furthermore...)
+  5. *Tempo* (Meanwhile, Afterwards, In advance...)
+  6. *Finalidade* (In order to, So that, Towards...)
+  7. *Exemplo* (For instance, Such as...)
+  8. *Ênfase* (Actually, Indeed, At least, No longer...)
+  9. *Substituição* (Instead of, Rather than...)
+  10. *Resumo / Conclusão* (In short, To sum up, All in all...)
+- **Mecânica de Estudo:**
+  - Card interativo com virada (flip) revelando regra, exemplo em inglês e tradução.
+  - Botão de áudio para pronúncia imediata.
+  - Sistema de **Dominado (Mastery)** persistido localmente: permite filtrar entre "Todos", "Em Aprendizado" e "Dominados".
+  - Barra de busca instantânea e filtros por categoria.
+
+#### 5.1.3. Match Rápido de Conectivos (Jogo de Associação)
+- Integrado dentro da experiência de conectivos.
+- **Mecânica:** Grade contendo 6 conectivos em inglês e 6 traduções correspondentes em português embaralhados.
+- **Regras:**
+  - O aluno seleciona 1 card de idioma e seu par correspondente.
+  - Combinação correta: cards desaparecem com animação, haptic de sucesso e incremento de streak e score (+100 pts + streak bonus).
+  - Combinação incorreta: cards piscam em vermelho com haptic de erro e o streak reinicia.
+  - Ao limpar a rodada, avança para nova rodada com fanfarra de vitória.
+
+---
+
+### 5.2. Phrasal Verbs Game
+Módulo dedicado ao aprendizado dos verbos frasais mais usados da língua inglesa:
+
+#### 5.2.1. Quiz das Frases (Desafio de Phrasal Verbs)
+- Filtro prévio por nível de dificuldade CEFR: **Todos**, **A1**, **A2**, **B1**, **B2**, **C1**.
+- Suporte aos modos **Zen** e **Arcade** (3 vidas, 18s por questão, streaks).
+- Sentenças contextuais reais com opções de Phrasal Verbs e explicação pedagógica do significado idiomático após cada resposta.
+
+#### 5.2.2. Match Rápido de Phrasal Verbs
+- Pareamento ágil entre o Phrasal Verb em inglês (ex: *give up*, *look forward to*, *run out of*) e seu significado equivalente em português (ex: *desistir*, *aguardar ansiosamente*, *ficar sem*).
+- Eliminação dinâmica de peças com feedback visual e sonoro.
+
+#### 5.2.3. Deck Didático de Phrasal Verbs
+- Navegação em cartões com pronúncia em áudio, partículas destacadas, definição em português, frases reais de exemplo e controle de itens dominados.
+
+---
+
+### 5.3. Família -Ever & Whereas
+Módulo focado exclusivamente nos conectivos de maior índice de dúvida sintática:
+
+- **Conectivos Contemplados:** *Whatever*, *Whenever*, *Wherever*, *Whoever*, *However* e *Whereas*.
+- **Guia Didático:**
+  - Matriz de regras e equivalências práticas (*Whatever = no matter what / anything that*).
+  - Comparativo especial: uso concessivo vs restritivo.
+  - Destaque sintático para o uso de vírgulas e posições na oração.
+- **Quiz de Fixação Sintática:** Perguntas focadas exclusivamente em lacunas envolvendo a família `-ever` e o contraste formal com `whereas`.
+
+---
+
+### 5.4. Expressões Idiomáticas (Idiomatic Expressions)
+Módulo didático para expressões idiomáticas coloquiais e profissionais:
+
+- **Catálogo de Expressões:** Expressões essenciais (ex: *Piece of cake*, *Bite the bullet*, *Under the weather*, *Break a leg*, *Hit the nail on the head*...).
+- **Desafio de Significados:** Sessão de quizzing dinâmico onde o aluno associa a expressão em inglês ao seu contexto e significado correto em português entre 4 opções.
+- **Dicas Culturais do John:** Explicação da origem histórica ou etiqueta de uso da expressão no dia a dia.
+
+---
+
+### 5.5. Arquitetura de Apresentação em Menus do Sistema
+- Cada um dos módulos principais (**Connectors Lab**, **Phrasal Verbs**, **Família -Ever & Whereas**, **Expressões Idiomáticas**) deve possuir um card de acesso na tela inicial/hub com:
+  - Ícone temático representativo com cores exclusivas do Design System.
+  - Título e subtítulo explicativos claros.
+  - Botão de ação direta com gradiente visual distintivo.
+- O **Deck dos 81 Conectivos** e o **Match Rápido** devem ser integrados e destacados como modos de estudo dentro do **Connectors Lab**.
+- Toda navegação deve ser controlada via `AppCoordinator` e rotas tipadas em `AppRoute`.
 
 ---
 

@@ -58,6 +58,21 @@ public struct RootCoordinatorView: View {
                 Text("Sessão não encontrada.")
             }
 
+        case .connectorsDeck:
+            ConnectorsDeckView(repository: container.connectorsRepository)
+
+        case .connectorsMatch:
+            ConnectorsMatchView(repository: container.connectorsRepository)
+
+        case .phrasalVerbsHub:
+            PhrasalVerbsHubView()
+
+        case .everFamilyHub:
+            EverFamilyHubView()
+
+        case .idiomaticExpressionsHub:
+            IdiomaticExpressionsHubView()
+
         case .lessonDetail(let id):
             VStack {
                 Text("Detalhes da Lição: \(id.uuidString)")
