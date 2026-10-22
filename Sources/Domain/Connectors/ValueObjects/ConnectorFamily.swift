@@ -34,6 +34,11 @@ public enum ConnectorFamily: String, Codable, CaseIterable, Sendable {
         }
     }
 
+    /// Nome para exibição nas telas (alias para localizedTitle).
+    public var displayName: String {
+        localizedTitle
+    }
+
     /// Ícone representativo do SF Symbols.
     public var iconName: String {
         switch self {

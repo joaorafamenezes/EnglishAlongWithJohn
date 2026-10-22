@@ -29,23 +29,30 @@ public struct ConnectorsDeckView: View {
     }
 
     private var filteredConnectors: [Connector] {
-        allConnectors.filter { connector in
-            let matchesSearch = searchText.isEmpty ||
-                connector.connector.localizedCaseInsensitiveContains(searchText) ||
-                connector.translation.localizedCaseInsensitiveContains(searchText)
+        var list = allConnectors
 
-            let matchesFamily = selectedFamily == nil || connector.family == selectedFamily
-
-            let isMastered = masteredIds.contains(connector.id)
-            let matchesMastery: Bool
-            switch filterMastery {
-            case .all: matchesMastery = true
-            case .learning: matchesMastery = !isMastered
-            case .mastered: matchesMastery = isMastered
-            }
-
-            return matchesSearch && matchesFamily && matchesMastery
+        if let selectedFamily = selectedFamily {
+            list = list.filter { $0.family == selectedFamily }
         }
+
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            list = list.filter { connector in
+                connector.connector.lowercased().contains(query) ||
+                connector.translation.lowercased().contains(query)
+            }
+        }
+
+        switch filterMastery {
+        case .all:
+            break
+        case .learning:
+            list = list.filter { !masteredIds.contains($0.id) }
+        case .mastered:
+            list = list.filter { masteredIds.contains($0.id) }
+        }
+
+        return list
     }
 
     public var body: some View {

@@ -38,7 +38,7 @@ struct ValidateConnectorAnswerUseCaseTests {
     func testArcadeCorrectAnswerScoringWithStreakAndTimeBonus() {
         // Arrange
         let exercise = makeSampleExercise()
-        var session = ConnectorSession(
+        let session = ConnectorSession(
             mode: .arcade,
             lives: 3,
             maxLives: 3,
