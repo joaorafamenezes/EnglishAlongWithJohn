@@ -85,26 +85,6 @@ public struct TodayLessonView: View {
                 }
                 .padding(.horizontal)
 
-                // Player de Áudio / Podcast
-                audioPlayerCard(lesson: lesson)
-                    .padding(.horizontal)
-
-                // Resumo pedagógico
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Sobre a aula de hoje")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-
-                    Text(lesson.summary)
-                        .font(.body)
-                        .lineSpacing(4)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.appCardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding(.horizontal)
 
                 // Laboratório de Conectivos (English Connectors Lab)
                 connectorsLabBannerCard
@@ -152,44 +132,6 @@ public struct TodayLessonView: View {
         .padding(.horizontal)
     }
 
-    @ViewBuilder
-    private func audioPlayerCard(lesson: Lesson) -> some View {
-        VStack(spacing: 14) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Áudio & Pronúncia")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                    Text("Ouça a entonação natural com John")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button(action: {
-                    viewModel.toggleAudioPlayback()
-                }) {
-                    Image(systemName: viewModel.isPlayingAudio ? "pause.circle.fill" : "play.circle.fill")
-                        .resizable()
-                        .frame(width: 44, height: 44)
-                        .foregroundStyle(.blue)
-                }
-            }
-
-            // Simulação de Waveform visual
-            HStack(spacing: 4) {
-                ForEach(0..<24) { index in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(index < 8 && viewModel.isPlayingAudio ? Color.blue : Color.gray.opacity(0.3))
-                        .frame(height: CGFloat([12, 24, 18, 30, 15, 28, 22, 16][index % 8]))
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .frame(height: 36)
-        }
-        .padding()
-        .background(Color.appCardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
 
     @ViewBuilder
     private var connectorsLabBannerCard: some View {
