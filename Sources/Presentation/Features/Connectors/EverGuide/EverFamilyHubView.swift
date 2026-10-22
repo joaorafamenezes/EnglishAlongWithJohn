@@ -29,7 +29,7 @@ public struct EverFamilyHubView: View {
             .padding(.horizontal)
 
             if selectedTab == .guide {
-                EverFamilyGuideView()
+                EverFamilyGuideView(isModal: false)
             } else {
                 everQuizView
             }

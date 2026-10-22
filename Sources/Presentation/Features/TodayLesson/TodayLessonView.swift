@@ -190,7 +190,7 @@ public struct TodayLessonView: View {
         iconColor: Color,
         buttonTitle: String,
         gradient: LinearGradient,
-        action: @escaping () -> Void
+        action: @escaping @MainActor () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {

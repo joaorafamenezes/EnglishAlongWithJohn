@@ -5,15 +5,22 @@
 
 import SwiftUI
 
-public struct MatchTile: Identifiable, Equatable {
+public struct MatchTile: Identifiable, Equatable, Hashable, Sendable {
     public let id: String
     public let pairId: String
     public let text: String
     public let lang: Lang
 
-    public enum Lang {
+    public enum Lang: Sendable, Equatable, Hashable {
         case english
         case portuguese
+    }
+
+    public init(id: String, pairId: String, text: String, lang: Lang) {
+        self.id = id
+        self.pairId = pairId
+        self.text = text
+        self.lang = lang
     }
 }
 

@@ -8,37 +8,48 @@ import SwiftUI
 /// Modal interativo com o guia mnemônico da Família -ever.
 public struct EverFamilyGuideView: View {
     @Environment(\.dismiss) private var dismiss
+    private let isModal: Bool
     private let items = EverFamilyItem.standardGuide
 
-    public init() {}
+    public init(isModal: Bool = true) {
+        self.isModal = isModal
+    }
 
     public var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Banner da Regra de Ouro do Teacher John
-                    ruleOfThumbCard
-
-                    // Cards Comparativos
-                    VStack(spacing: 14) {
-                        ForEach(items) { item in
-                            guideItemCard(item: item)
+        if isModal {
+            NavigationStack {
+                contentView
+                    .navigationTitle("Guia da Família -EVER")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Fechar") {
+                                dismiss()
+                            }
                         }
                     }
-                }
-                .padding()
             }
-            .background(Color.appBackground)
-            .navigationTitle("Guia da Família -EVER")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fechar") {
-                        dismiss()
+        } else {
+            contentView
+        }
+    }
+
+    private var contentView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Banner da Regra de Ouro do Teacher John
+                ruleOfThumbCard
+
+                // Cards Comparativos
+                VStack(spacing: 14) {
+                    ForEach(items) { item in
+                        guideItemCard(item: item)
                     }
                 }
             }
+            .padding()
         }
+        .background(Color.appBackground)
     }
 
     @ViewBuilder

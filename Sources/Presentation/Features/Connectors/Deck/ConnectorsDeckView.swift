@@ -261,7 +261,7 @@ public struct ConnectorsDeckView: View {
             } else {
                 masteredIds.remove(id)
             }
-            try? await repository.toggleMastered(id: id)
+            try? await repository.toggleMasteredId(id)
         }
     }
 }
