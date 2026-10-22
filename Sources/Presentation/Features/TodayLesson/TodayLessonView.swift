@@ -106,10 +106,6 @@ public struct TodayLessonView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
 
-                // Seção de Exercícios Práticos
-                exerciseSectionCard(lesson: lesson)
-                    .padding(.horizontal)
-
                 // Laboratório de Conectivos (English Connectors Lab)
                 connectorsLabBannerCard
                     .padding(.horizontal)
@@ -189,40 +185,6 @@ public struct TodayLessonView: View {
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .frame(height: 36)
-        }
-        .padding()
-        .background(Color.appCardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-
-    @ViewBuilder
-    private func exerciseSectionCard(lesson: Lesson) -> some View {
-        VStack(spacing: 12) {
-            HStack {
-                Label("\(lesson.exercises.count) Exercícios Práticos", systemImage: "checkmark.circle.badge.questionmark")
-                    .font(.headline)
-                Spacer()
-            }
-
-            Text("Fixe o vocabulário e expressões idiomáticas aprendidas no episódio.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Button(action: {
-                viewModel.didTapStartExercises(lesson: lesson)
-            }) {
-                HStack {
-                    Text("Iniciar Desafio do Dia")
-                        .fontWeight(.semibold)
-                    Image(systemName: "arrow.right")
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
         }
         .padding()
         .background(Color.appCardBackground)
