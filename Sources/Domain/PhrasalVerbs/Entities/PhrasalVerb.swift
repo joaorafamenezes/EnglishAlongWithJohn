@@ -27,6 +27,7 @@ public struct PhrasalVerb: Identifiable, Sendable, Equatable {
     public let exampleEn: String
     public let examplePt: String
     public let isMastered: Bool
+    public let customMaskedSentence: String?
 
     public init(
         id: String,
@@ -37,7 +38,8 @@ public struct PhrasalVerb: Identifiable, Sendable, Equatable {
         level: PhrasalVerbLevel,
         exampleEn: String,
         examplePt: String,
-        isMastered: Bool = false
+        isMastered: Bool = false,
+        customMaskedSentence: String? = nil
     ) {
         self.id = id
         self.verb = verb
@@ -48,6 +50,20 @@ public struct PhrasalVerb: Identifiable, Sendable, Equatable {
         self.exampleEn = exampleEn
         self.examplePt = examplePt
         self.isMastered = isMastered
+        self.customMaskedSentence = customMaskedSentence
+    }
+
+    /// Retorna a frase em inglês com o phrasal verb mascarado pela lacuna "_____".
+    public var maskedSentence: String {
+        if let custom = customMaskedSentence, !custom.isEmpty {
+            return custom
+        }
+        return PhrasalVerbMasker.mask(
+            sentence: exampleEn,
+            phrasalVerb: phrasalVerb,
+            verb: verb,
+            particle: particle
+        )
     }
 
     public func withMastered(_ mastered: Bool) -> PhrasalVerb {
@@ -60,7 +76,8 @@ public struct PhrasalVerb: Identifiable, Sendable, Equatable {
             level: level,
             exampleEn: exampleEn,
             examplePt: examplePt,
-            isMastered: mastered
+            isMastered: mastered,
+            customMaskedSentence: customMaskedSentence
         )
     }
 }

@@ -20,6 +20,7 @@ public struct PhrasalVerbsHubView: View {
     @State private var quizSelectedOption: String? = nil
     @State private var quizFeedbackRevealed: Bool = false
     @State private var isArcade: Bool = false
+    @State private var currentQuizOptions: [String] = []
 
     // Estados do Match
     @State private var matchTiles: [MatchTile] = []
@@ -79,6 +80,12 @@ public struct PhrasalVerbsHubView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             loadInitialData()
+        }
+        .onChange(of: selectedLevel) { _, _ in
+            quizIndex = 0
+            quizFeedbackRevealed = false
+            quizSelectedOption = nil
+            loadCurrentQuizQuestion()
         }
     }
 
@@ -160,11 +167,7 @@ public struct PhrasalVerbsHubView: View {
 
             if !filteredVerbs.isEmpty {
                 let currentItem = filteredVerbs[quizIndex % filteredVerbs.count]
-                let questionSentence = currentItem.exampleEn.replacingOccurrences(
-                    of: currentItem.phrasalVerb,
-                    with: "_____",
-                    options: .caseInsensitive
-                )
+                let questionSentence = currentItem.maskedSentence
 
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
@@ -191,12 +194,13 @@ public struct PhrasalVerbsHubView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
-                    // Opções
-                    let options = generateQuizOptions(correct: currentItem)
+                    // Opções fixas durante a exibição da questão
+                    let activeOptions = currentQuizOptions.isEmpty ? generateQuizOptions(correct: currentItem) : currentQuizOptions
+
                     VStack(spacing: 10) {
-                        ForEach(options, id: \.self) { option in
+                        ForEach(activeOptions, id: \.self) { option in
                             Button(action: {
-                                handleQuizOptionSelected(option, correct: currentItem.phrasalVerb)
+                                handleQuizOptionSelected(option, correct: currentItem.phrasalVerb, activeOptions: activeOptions)
                             }) {
                                 HStack {
                                     Text(option)
@@ -222,8 +226,37 @@ public struct PhrasalVerbsHubView: View {
                             .disabled(quizFeedbackRevealed)
                         }
                     }
+                    .onAppear {
+                        if currentQuizOptions.isEmpty {
+                            currentQuizOptions = activeOptions
+                        }
+                    }
 
                     if quizFeedbackRevealed {
+                        // Explicação pedagógica contextual
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: quizSelectedOption?.lowercased() == currentItem.phrasalVerb.lowercased() ? "checkmark.circle.fill" : "info.circle.fill")
+                                    .foregroundStyle(quizSelectedOption?.lowercased() == currentItem.phrasalVerb.lowercased() ? .green : .orange)
+                                Text(quizSelectedOption?.lowercased() == currentItem.phrasalVerb.lowercased() ? "Correto!" : "Resposta correta:")
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                            }
+
+                            Text("**\(currentItem.phrasalVerb)**: \(currentItem.meaningPt)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+
+                            Text("Frase contextual completa: \"\(currentItem.exampleEn)\"")
+                                .font(.caption)
+                                .italic()
+                                .foregroundStyle(.blue)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.appCardBackground.opacity(0.85))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+
                         Button(action: advanceQuiz) {
                             HStack {
                                 Text("Avançar para a próxima")
@@ -242,6 +275,11 @@ public struct PhrasalVerbsHubView: View {
                 .background(Color.appCardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
+            }
+            .onAppear {
+                if currentQuizOptions.isEmpty && !filteredVerbs.isEmpty {
+                    loadCurrentQuizQuestion()
+                }
             }
         }
     }
@@ -379,17 +417,31 @@ public struct PhrasalVerbsHubView: View {
 
     private func loadInitialData() {
         phrasalVerbs = dataSource.loadPhrasalVerbs()
+        loadCurrentQuizQuestion()
         startNewMatchRound()
+    }
+
+    private func loadCurrentQuizQuestion() {
+        guard !filteredVerbs.isEmpty else {
+            currentQuizOptions = []
+            return
+        }
+        let currentItem = filteredVerbs[quizIndex % filteredVerbs.count]
+        currentQuizOptions = generateQuizOptions(correct: currentItem)
     }
 
     private func generateQuizOptions(correct: PhrasalVerb) -> [String] {
         var options = [correct.phrasalVerb]
-        let distractors = phrasalVerbs.filter { $0.id != correct.id }.shuffled().prefix(3).map { $0.phrasalVerb }
+        let otherVerbs = phrasalVerbs.filter { $0.id != correct.id }
+        let distractors = otherVerbs.shuffled().prefix(3).map { $0.phrasalVerb }
         options.append(contentsOf: distractors)
         return options.shuffled()
     }
 
-    private func handleQuizOptionSelected(_ option: String, correct: String) {
+    private func handleQuizOptionSelected(_ option: String, correct: String, activeOptions: [String]) {
+        if currentQuizOptions.isEmpty {
+            currentQuizOptions = activeOptions
+        }
         quizSelectedOption = option
         quizFeedbackRevealed = true
 
@@ -408,6 +460,7 @@ public struct PhrasalVerbsHubView: View {
         quizFeedbackRevealed = false
         quizSelectedOption = nil
         quizIndex += 1
+        loadCurrentQuizQuestion()
     }
 
     private func quizOptionBackground(_ option: String, correct: String) -> Color {

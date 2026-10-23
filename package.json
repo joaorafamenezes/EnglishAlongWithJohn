@@ -1,0 +1,19 @@
+{
+  "name": "english-along-with-john-mobile-hub",
+  "version": "1.0.0",
+  "description": "Mobile automation and validation suite for iPhone 15 Pro",
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix ../../Games/ConnectorsInEnglish/frontend run dev",
+    "test:mobile": "node scripts/test-mobile-view.js"
+  },
+  "keywords": [
+    "iphone15pro",
+    "mobile-emulation",
+    "qa-automation",
+    "vite",
+    "chrome-devtools"
+  ],
+  "author": "",
+  "license": "ISC"
+}

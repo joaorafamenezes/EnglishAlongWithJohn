@@ -13,6 +13,7 @@ public struct IdiomaticExpressionsHubView: View {
     @State private var selectedOptionId: String? = nil
     @State private var isAnswerSubmitted: Bool = false
     @State private var score: Int = 0
+    @State private var currentQuizOptions: [IdiomaticExpression] = []
 
     private let dataSource = LocalIdiomaticExpressionsDataSource()
 
@@ -93,7 +94,7 @@ public struct IdiomaticExpressionsHubView: View {
     private var quizView: some View {
         if !expressions.isEmpty {
             let current = expressions[quizIndex % expressions.count]
-            let options = generateQuizOptions(correct: current)
+            let activeOptions = currentQuizOptions.isEmpty ? generateQuizOptions(correct: current) : currentQuizOptions
 
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
@@ -125,9 +126,9 @@ public struct IdiomaticExpressionsHubView: View {
                 }
 
                 VStack(spacing: 10) {
-                    ForEach(options, id: \.id) { option in
+                    ForEach(activeOptions, id: \.id) { option in
                         Button(action: {
-                            handleOptionTap(option.id, correctId: current.id)
+                            handleOptionTap(option.id, correctId: current.id, activeOptions: activeOptions)
                         }) {
                             HStack {
                                 Text(option.meaningPt)
@@ -151,6 +152,11 @@ public struct IdiomaticExpressionsHubView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .disabled(isAnswerSubmitted)
+                    }
+                }
+                .onAppear {
+                    if currentQuizOptions.isEmpty {
+                        currentQuizOptions = activeOptions
                     }
                 }
 
@@ -186,6 +192,11 @@ public struct IdiomaticExpressionsHubView: View {
             .background(Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)
+            .onAppear {
+                if currentQuizOptions.isEmpty && !expressions.isEmpty {
+                    loadCurrentQuizQuestion()
+                }
+            }
         }
     }
 
@@ -240,7 +251,19 @@ public struct IdiomaticExpressionsHubView: View {
         .padding(.horizontal)
     }
 
-    // MARK: - Lógica Auxiliar
+    private func loadInitialData() {
+        expressions = dataSource.loadExpressions()
+        loadCurrentQuizQuestion()
+    }
+
+    private func loadCurrentQuizQuestion() {
+        guard !expressions.isEmpty else {
+            currentQuizOptions = []
+            return
+        }
+        let current = expressions[quizIndex % expressions.count]
+        currentQuizOptions = generateQuizOptions(correct: current)
+    }
 
     private func generateQuizOptions(correct: IdiomaticExpression) -> [IdiomaticExpression] {
         var list = [correct]
@@ -249,7 +272,10 @@ public struct IdiomaticExpressionsHubView: View {
         return list.shuffled()
     }
 
-    private func handleOptionTap(_ id: String, correctId: String) {
+    private func handleOptionTap(_ id: String, correctId: String, activeOptions: [IdiomaticExpression]) {
+        if currentQuizOptions.isEmpty {
+            currentQuizOptions = activeOptions
+        }
         selectedOptionId = id
         isAnswerSubmitted = true
         if id == correctId {
@@ -261,6 +287,7 @@ public struct IdiomaticExpressionsHubView: View {
         isAnswerSubmitted = false
         selectedOptionId = nil
         quizIndex += 1
+        loadCurrentQuizQuestion()
     }
 
     private func optionBackground(_ id: String, correctId: String) -> Color {
