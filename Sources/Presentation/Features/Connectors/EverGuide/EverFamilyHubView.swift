@@ -5,13 +5,15 @@
 
 import SwiftUI
 
-/// Hub Dedicado para a Família -Ever & Whereas com Guia e Quiz de Fixação.
+/// Hub Dedicado para a Família -Ever & Whereas com Guia Comparativo e Desafio de Fixação.
+/// Mantido em bloco próprio e separado, fiel à experiência da aplicação web.
 public struct EverFamilyHubView: View {
     @State private var selectedTab: EverTab = .guide
+    @State private var everQuestions: [ConnectorExercise] = EverQuestionsData.questions
 
     public enum EverTab: String, CaseIterable, Identifiable {
-        case guide = "Guia & Regra de Ouro"
-        case quiz = "Quiz de Fixação"
+        case guide = "Estudo Comparativo"
+        case quiz = "Prática de Fixação (25 Frases)"
 
         public var id: String { rawValue }
     }
@@ -19,14 +21,16 @@ public struct EverFamilyHubView: View {
     public init() {}
 
     public var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
+            // Seletor de Abas
             Picker("Aba", selection: $selectedTab) {
                 ForEach(EverTab.allCases) { tab in
                     Text(tab.rawValue).tag(tab)
                 }
             }
             .pickerStyle(.segmented)
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
 
             if selectedTab == .guide {
                 EverFamilyGuideView(isModal: false)
@@ -39,116 +43,169 @@ public struct EverFamilyHubView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    // MARK: - Aba de Prática Exclusiva com as 25 Frases da Família -Ever
+
     @ViewBuilder
     private var everQuizView: some View {
         ScrollView {
             VStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
+                // Header Informativo
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
                         Image(systemName: "sparkles")
-                            .foregroundStyle(.purple)
-                        Text("Desafio Especial -Ever")
+                            .foregroundStyle(.teal)
+                        Text("Treino Focado: Regra Mental do Sufixo -Ever")
                             .font(.headline)
+                            .fontWeight(.bold)
                     }
 
-                    Text("Identifique o conectivo ideal para cada contexto semântico:")
+                    Text("Aplique a regra mnemônica (Pessoa, Lugar, Tempo, Objeto/Evento, Modo ou Contraste) para preencher a lacuna correta em cada frase:")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .lineSpacing(2)
+
+                    HStack {
+                        Label("\(everQuestions.count) frases práticas com explicações completas", systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.teal)
+                    }
+                    .padding(.top, 4)
                 }
-                .padding()
+                .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.appCardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding(.horizontal)
+                .padding(.horizontal, 16)
 
-                VStack(spacing: 12) {
-                    quizCard(
-                        prompt: "_____ happens during the deploy, keep the communication channel open.",
-                        answer: "Whatever",
-                        options: ["Whatever", "Whenever", "Wherever", "Whoever"],
-                        tip: "Refere-se a qualquer evento/coisa que aconteça ('no matter what')."
-                    )
-
-                    quizCard(
-                        prompt: "Senior engineers mentor juniors, _____ interns focus on learning fundamentals.",
-                        answer: "Whereas",
-                        options: ["Whereas", "Wherever", "Whatever", "Whenever"],
-                        tip: "Contraste analítico e formal direto entre dois grupos ('ao passo que')."
-                    )
-
-                    quizCard(
-                        prompt: "Call the emergency phone line _____ you encounter a critical severity 1 incident.",
-                        answer: "Whenever",
-                        options: ["Whenever", "Whoever", "Whereas", "Whatever"],
-                        tip: "Refere-se ao tempo e momento ('toda vez que / no momento em que')."
-                    )
+                // Lista de Exercícios
+                LazyVStack(spacing: 14) {
+                    ForEach(Array(everQuestions.enumerated()), id: \.element.id) { index, exercise in
+                        EverExerciseCardView(index: index + 1, exercise: exercise)
+                    }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16)
             }
-            .padding(.vertical)
+            .padding(.vertical, 8)
         }
-    }
-
-    @ViewBuilder
-    private func quizCard(prompt: String, answer: String, options: [String], tip: String) -> some View {
-        EverQuestionItemView(prompt: prompt, answer: answer, options: options, tip: tip)
     }
 }
 
-private struct EverQuestionItemView: View {
-    let prompt: String
-    let answer: String
-    let options: [String]
-    let tip: String
+// MARK: - Card Interativo do Exercício da Família -Ever
 
-    @State private var selected: String? = nil
-    @State private var revealed: Bool = false
+private struct EverExerciseCardView: View {
+    let index: Int
+    let exercise: ConnectorExercise
+
+    @State private var selectedOptionId: String? = nil
+    @State private var isAnswered: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(prompt)
+            // Número e Badge
+            HStack {
+                Text("Questão #\(index)")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text(exercise.connectorTerm)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.teal.opacity(0.12))
+                    .foregroundStyle(.teal)
+                    .clipShape(Capsule())
+            }
+
+            // Prompt
+            Text(exercise.prompt)
                 .font(.subheadline)
                 .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .lineSpacing(3)
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                ForEach(options, id: \.self) { option in
+            // Opções
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                ForEach(exercise.options) { option in
+                    let isSelected = selectedOptionId == option.id
+                    let isCorrect = option.id == exercise.correctOptionId
+
                     Button(action: {
-                        selected = option
-                        revealed = true
+                        selectedOptionId = option.id
+                        isAnswered = true
                     }) {
                         HStack {
-                            Text(option)
-                                .font(.caption)
+                            Text(option.text)
+                                .font(.footnote)
                                 .fontWeight(.bold)
                             Spacer()
-                            if revealed {
-                                if option == answer {
-                                    Image(systemName: "checkmark")
+                            if isAnswered {
+                                if isCorrect {
+                                    Image(systemName: "checkmark.circle.fill")
                                         .foregroundStyle(.green)
-                                } else if selected == option {
-                                    Image(systemName: "xmark")
+                                } else if isSelected {
+                                    Image(systemName: "xmark.circle.fill")
                                         .foregroundStyle(.red)
                                 }
                             }
                         }
-                        .padding(10)
-                        .background(revealed ? (option == answer ? Color.green.opacity(0.18) : (selected == option ? Color.red.opacity(0.18) : Color.appBackground)) : Color.appBackground)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(buttonBackground(isCorrect: isCorrect, isSelected: isSelected))
+                        .foregroundStyle(isAnswered && (isCorrect || isSelected) ? .white : .primary)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
-                    .disabled(revealed)
+                    .disabled(isAnswered)
                 }
             }
 
-            if revealed {
-                Text("Dica: \(tip)")
-                    .font(.caption2)
-                    .foregroundStyle(.purple)
-                    .padding(.top, 2)
+            // Explicação Pedagógica Contextual ao Responder
+            if isAnswered {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: selectedOptionId == exercise.correctOptionId ? "checkmark.circle.fill" : "info.circle.fill")
+                            .foregroundStyle(selectedOptionId == exercise.correctOptionId ? .green : .orange)
+                        Text(selectedOptionId == exercise.correctOptionId ? "Correto!" : "Resposta correta: \(exercise.connectorTerm)")
+                            .font(.footnote)
+                            .fontWeight(.bold)
+                    }
+
+                    Text("Tradução: \"\(exercise.sentenceTranslation)\"")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
+                    Text(exercise.explanation)
+                        .font(.caption2)
+                        .foregroundStyle(.primary)
+
+                    if !exercise.proTip.isEmpty {
+                        Text("💡 Dica de Ouro: \(exercise.proTip)")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.teal)
+                            .padding(.top, 2)
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.teal.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
-        .padding()
+        .padding(14)
         .background(Color.appCardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func buttonBackground(isCorrect: Bool, isSelected: Bool) -> Color {
+        guard isAnswered else { return Color.appBackground }
+        if isCorrect { return Color.green }
+        if isSelected { return Color.red }
+        return Color.appBackground
     }
 }

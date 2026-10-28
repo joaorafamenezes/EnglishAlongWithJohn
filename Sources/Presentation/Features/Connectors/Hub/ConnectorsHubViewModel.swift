@@ -23,7 +23,8 @@ public final class ConnectorsHubViewModel {
     public private(set) var isLoading: Bool = false
     public private(set) var errorMessage: String? = nil
     public private(set) var masteredCount: Int = 0
-    public private(set) var totalCatalogCount: Int = 12
+    public private(set) var totalCatalogCount: Int = 81
+
 
     // MARK: - Dependências
     private let repository: any ConnectorsRepositoryProtocol

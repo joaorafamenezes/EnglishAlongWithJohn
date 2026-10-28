@@ -6,6 +6,7 @@
 import SwiftUI
 
 /// Tela Hub de Configuração e Treino de Conectivos em Inglês.
+/// Fiel ao design e funcionalidades do jogo web (Connectors in English).
 public struct ConnectorsHubView: View {
     @Bindable private var viewModel: ConnectorsHubViewModel
 
@@ -15,119 +16,219 @@ public struct ConnectorsHubView: View {
 
     public var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                // Header com Progresso & Apresentação
-                headerStatsView
+            VStack(spacing: 22) {
+                // Header com Badge e Título do Game Web
+                headerBrandingSection
 
-                // Modos Integrados de Conectivos: Deck dos 81 e Match Rápido
-                companionToolsSection
+                // Banner Especial: Phrasal Verbs
+                phrasalVerbsPromoCard
 
-                // Seleção de Modo: Zen vs Arcade
+                // BLOCO SEPARADO: Especial Família -Ever & Whereas
+                everFamilySpecialCard
+
+                // Modos de Prática: Estudo Zen vs Desafio Arcade
                 modeSelectorSection
 
-                // Seleção de Tópico / Família
-                familyFilterSection
+                // Seção de Configuração da Sessão (Dominados, Família, Quantidade)
+                practiceConfigurationSection
 
-                // Configurações de Quantidade e Dominados
-                sessionSettingsSection
+                // Modos Integrados de Apoio: Deck dos 81 Conectivos e Match Rápido
+                companionToolsSection
 
                 // Banner de Erro Reativo
                 if let error = viewModel.errorMessage {
                     errorBanner(message: error)
                 }
 
-                // Botão de Iniciar Sessão
+                // Botão de Iniciar Prática
                 startButtonView
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
         }
         .background(Color.appBackground)
-        .navigationTitle("Prática de Conectivos")
+        .navigationTitle("Conectivos em Inglês")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: { viewModel.openEverFamilyGuide() }) {
-                    Image(systemName: "book.pages.fill")
-                        .foregroundStyle(.blue)
-                }
-            }
-        }
-        .sheet(isPresented: $viewModel.isGuideSheetPresented) {
-            EverFamilyGuideView()
-        }
         .task {
             await viewModel.onAppear()
         }
     }
 
-    // MARK: - Subviews
+    // MARK: - 1. Header com Identidade Visual do Jogo Web
 
     @ViewBuilder
-    private var headerStatsView: some View {
-        VStack(spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("English Connectors Lab")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                    Text("Domine os conectivos essenciais para fluência e argumentação técnica.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button(action: { viewModel.openEverFamilyGuide() }) {
-                    VStack(spacing: 2) {
-                        Image(systemName: "lightbulb.fill")
-                            .font(.title3)
-                            .foregroundStyle(.orange)
-                        Text("Guia -Ever")
-                            .font(.caption2)
-                            .fontWeight(.semibold)
-                    }
-                    .padding(8)
-                    .background(Color.appCardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-            }
-
-            // Barra de Maestria
-            HStack {
-                Label("\(viewModel.masteredCount) de \(viewModel.totalCatalogCount) conectivos dominados", systemImage: "checkmark.seal.fill")
+    private var headerBrandingSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Badge
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .font(.caption2)
+                Text("Sem Julgamento • Foco em Fixação")
                     .font(.caption)
-                    .foregroundStyle(.green)
-                Spacer()
+                    .fontWeight(.bold)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .foregroundStyle(Color.green)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
             .background(Color.green.opacity(0.12))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(Capsule())
+
+            // Título Principal
+            Text("Pratique conectivos em frases reais da vida e da tecnologia.")
+                .font(.title2)
+                .fontWeight(.heavy)
+                .foregroundStyle(.primary)
+                .lineSpacing(2)
+
+            // Subtítulo didático
+            Text("Exercite preenchimento de lacunas com explicações sintáticas detalhadas, tradução completa da frase em português e pronúncia em inglês. Aprenda o porquê de cada escolha sem estresse ou punição.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineSpacing(3)
         }
-        .padding()
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 
+    // MARK: - 2. Promo Phrasal Verbs
+
+    @ViewBuilder
+    private var phrasalVerbsPromoCard: some View {
+        NavigationLink(value: AppRoute.phrasalVerbsHub) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.purple.opacity(0.15))
+                        .frame(width: 48, height: 48)
+                    Image(systemName: "airplane.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.purple)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Novo Jogo: Phrasal Verbs Challenge")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+
+                    Text("Desafio de frases, modo match por tempo e dicionário interativo.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.purple)
+            }
+            .padding(14)
+            .background(Color.purple.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.purple.opacity(0.35), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 3. BLOCO SEPARADO: Especial Família -Ever & Whereas
+
+    @ViewBuilder
+    private var everFamilySpecialCard: some View {
+        NavigationLink(value: AppRoute.everFamilyHub) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.teal.opacity(0.18))
+                            .frame(width: 46, height: 46)
+                        Image(systemName: "target")
+                            .font(.title2)
+                            .foregroundStyle(.teal)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text("Sessão Especial:")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.teal)
+                            Text("Whatever, Whenever, Wherever...")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
+                        }
+
+                        Text("Aprenda a regra mental do sufixo -ever, diferencie o falso amigo Whereas (contraste) de Wherever (lugar), e treine frases práticas exclusivas.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineSpacing(2)
+                    }
+                }
+
+                HStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Text("Abrir Estudo Comparativo & Quiz")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                        Image(systemName: "arrow.right")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                    }
+                    .foregroundStyle(.teal)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.teal.opacity(0.12))
+                    .clipShape(Capsule())
+                }
+            }
+            .padding(14)
+            .background(Color.teal.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.teal.opacity(0.4), lineWidth: 1.2)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 4. Seleção de Modo (Zen vs Arcade)
+
     @ViewBuilder
     private var modeSelectorSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Modo de Aprendizado")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Estilo de Treino")
+                .font(.subheadline)
+                .fontWeight(.bold)
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
 
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
+                // Modo Zen
                 modeCard(
                     mode: .zen,
-                    title: "Modo Zen",
-                    subtitle: "Sem vidas, sem cronômetro. Foque na compreensão gramatical.",
+                    badge: "RECOMENDADO",
+                    title: "Modo Estudo Zen",
+                    subtitle: "Zero pressão. Sem vidas, sem cronômetro correndo. Leia as explicações com tranquilidade.",
                     icon: "leaf.fill",
                     color: .green
                 )
 
+                // Modo Arcade
                 modeCard(
                     mode: .arcade,
+                    badge: "DESAFIO",
                     title: "Desafio Arcade",
-                    subtitle: "18s por questão, 3 vidas, bônus de agilidade e combo streak.",
-                    icon: "flame.fill",
+                    subtitle: "18s por frase, 3 vidas e bônus de combo por sequência de acertos rápidos.",
+                    icon: "bolt.fill",
                     color: .orange
                 )
             }
@@ -135,22 +236,29 @@ public struct ConnectorsHubView: View {
     }
 
     @ViewBuilder
-    private func modeCard(mode: GameMode, title: String, subtitle: String, icon: String, color: Color) -> some View {
+    private func modeCard(mode: GameMode, badge: String, title: String, subtitle: String, icon: String, color: Color) -> some View {
         let isSelected = viewModel.selectedMode == mode
 
         Button(action: {
-            viewModel.selectedMode = mode
+            withAnimation(.easeInOut(duration: 0.2)) {
+                viewModel.selectedMode = mode
+            }
         }) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Image(systemName: icon)
-                        .font(.title3)
+                    Text(badge)
+                        .font(.system(size: 9, weight: .heavy))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(isSelected ? Color.white.opacity(0.25) : color.opacity(0.15))
                         .foregroundStyle(isSelected ? .white : color)
+                        .clipShape(Capsule())
+
                     Spacer()
-                    if isSelected {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.white)
-                    }
+
+                    Image(systemName: icon)
+                        .font(.subheadline)
+                        .foregroundStyle(isSelected ? .white : color)
                 }
 
                 Text(title)
@@ -160,121 +268,168 @@ public struct ConnectorsHubView: View {
 
                 Text(subtitle)
                     .font(.caption2)
-                    .foregroundStyle(isSelected ? .white.opacity(0.85) : .secondary)
-                    .multilineTextAlignment(.leading)
+                    .foregroundStyle(isSelected ? .white.opacity(0.9) : .secondary)
                     .lineLimit(3)
+                    .multilineTextAlignment(.leading)
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 125, alignment: .topLeading)
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
             .background(isSelected ? color : Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? color : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? color : Color.primary.opacity(0.08), lineWidth: 1.5)
             )
         }
         .buttonStyle(.plain)
     }
 
-    @ViewBuilder
-    private var familyFilterSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Tópico de Estudo")
-                .font(.headline)
+    // MARK: - 5. Configuração da Prática
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    topicPill(filter: .all, title: "Todas as Famílias", icon: "square.grid.2x2.fill")
-                    topicPill(filter: .everFamily, title: "Família -EVER (Especial)", icon: "sparkles")
-                    ForEach(ConnectorFamily.allCases, id: \.self) { family in
-                        topicPill(filter: .family(family), title: family.localizedTitle, icon: family.iconName)
+    @ViewBuilder
+    private var practiceConfigurationSection: some View {
+        VStack(spacing: 14) {
+            // Checkbox: Ocultar Dominados
+            Button(action: {
+                viewModel.hideMastered.toggle()
+            }) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: viewModel.hideMastered ? "checkmark.square.fill" : "square")
+                        .font(.title3)
+                        .foregroundStyle(viewModel.hideMastered ? .blue : .secondary)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Focar apenas nos itens em estudo")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.primary)
+                        Text("\(viewModel.masteredCount) de \(viewModel.totalCatalogCount) conectivos marcados como dominados no Deck serão ignorados nesta sessão.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineSpacing(2)
                     }
-                }
-            }
-        }
-    }
 
-    @ViewBuilder
-    private func topicPill(filter: ConnectorFamilyFilter, title: String, icon: String) -> some View {
-        let isSelected = viewModel.selectedFamilyFilter == filter
-
-        Button(action: {
-            viewModel.selectedFamilyFilter = filter
-        }) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.caption)
-                Text(title)
-                    .font(.footnote)
-                    .fontWeight(isSelected ? .semibold : .regular)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(isSelected ? Color.blue : Color.appCardBackground)
-            .foregroundStyle(isSelected ? .white : .primary)
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(isSelected ? Color.blue : Color.primary.opacity(0.08), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private var sessionSettingsSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Configurações da Rodada")
-                .font(.headline)
-
-            VStack(spacing: 12) {
-                // Quantidade de Frases
-                HStack {
-                    Text("Quantidade de Frases")
-                        .font(.subheadline)
                     Spacer()
-                    Picker("Quantidade", selection: $viewModel.selectedQuestionCount) {
-                        Text("10 Frases").tag(10)
-                        Text("20 Frases").tag(20)
+                }
+                .padding(12)
+                .background(Color.appCardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
+
+            // Seletores: Família e Quantidade
+            VStack(spacing: 12) {
+                // Família de Conectivos
+                HStack {
+                    Text("Família de Conectivos:")
+                        .font(.footnote)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Picker("Família", selection: $viewModel.selectedFamilyFilter) {
+                        Text("Todas as Categorias").tag(ConnectorFamilyFilter.all)
+                        ForEach(ConnectorFamily.allCases, id: \.self) { family in
+                            Text(family.displayName).tag(ConnectorFamilyFilter.family(family))
+                        }
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 170)
+                    .pickerStyle(.menu)
+                    .tint(.blue)
                 }
 
                 Divider()
 
-                // Ocultar Dominados
-                Toggle(isOn: $viewModel.hideMastered) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Ocultar conectivos dominados")
-                            .font(.subheadline)
-                        Text("Foca nos termos ainda em fixação")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                // Quantidade de Frases
+                HStack {
+                    Text("Quantidade de Frases:")
+                        .font(.footnote)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Picker("Quantidade", selection: $viewModel.selectedQuestionCount) {
+                        Text("5 frases").tag(5)
+                        Text("10 frases").tag(10)
+                        Text("15 frases").tag(15)
+                        Text("20 frases").tag(20)
+                        Text("30 frases").tag(30)
                     }
+                    .pickerStyle(.menu)
+                    .tint(.blue)
                 }
-                .tint(.blue)
             }
-            .padding()
+            .padding(14)
             .background(Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 
+    // MARK: - 6. Ferramentas Complementares (Deck e Match)
+
     @ViewBuilder
-    private func errorBanner(message: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "exclamationmark.circle.fill")
-                .foregroundStyle(.orange)
-            Text(message)
-                .font(.footnote)
-                .foregroundStyle(.primary)
+    private var companionToolsSection: some View {
+        HStack(spacing: 12) {
+            NavigationLink(value: AppRoute.connectorsDeck) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Image(systemName: "rectangle.stack.fill")
+                            .foregroundStyle(.blue)
+                        Spacer()
+                        Text("\(viewModel.totalCatalogCount) Cards")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.blue)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.blue.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+                    Text("Deck dos 81 Conectivos")
+                        .font(.footnote)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+                    Text("Flashcards com regras de ouro e maestria")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.appCardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
+
+            NavigationLink(value: AppRoute.connectorsMatch) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .foregroundStyle(.orange)
+                        Spacer()
+                        Text("6x6")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.orange)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+                    Text("Match Rápido")
+                        .font(.footnote)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+                    Text("Associação ágil de conectivo e significado")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.appCardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
         }
-        .padding(12)
-        .background(Color.orange.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
+
+    // MARK: - 7. Botão Iniciar
 
     @ViewBuilder
     private var startButtonView: some View {
@@ -283,83 +438,41 @@ public struct ConnectorsHubView: View {
                 await viewModel.startSession()
             }
         }) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 if viewModel.isLoading {
                     ProgressView().tint(.white)
                 } else {
-                    Text("Iniciar Sessão")
+                    Text("Começar a Praticar")
                         .font(.headline)
-                    Image(systemName: "play.circle.fill")
-                        .font(.title3)
+                        .fontWeight(.bold)
+                    Image(systemName: "arrow.right")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
                 }
             }
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(Color.blue)
+            .background(Color.orange)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+            .shadow(color: Color.orange.opacity(0.3), radius: 8, x: 0, y: 4)
         }
         .disabled(viewModel.isLoading)
-        .padding(.top, 8)
+        .padding(.top, 4)
     }
 
     @ViewBuilder
-    private var companionToolsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Estudos & Modos Complementares")
+    private func errorBanner(message: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundStyle(.orange)
+            Text(message)
                 .font(.caption)
-                .fontWeight(.bold)
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-
-            HStack(spacing: 12) {
-                NavigationLink(value: AppRoute.connectorsDeck) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Image(systemName: "rectangle.stack.fill")
-                            .font(.title2)
-                            .foregroundStyle(.blue)
-                        Text("Deck dos 81 Conectivos")
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.primary)
-                        Text("Flashcards e Maestria")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.appCardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-                .buttonStyle(.plain)
-
-                NavigationLink(value: AppRoute.connectorsMatch) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.orange)
-                        Text("Match Rápido")
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.primary)
-                        Text("Associação 6x6")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.appCardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-                .buttonStyle(.plain)
-            }
+                .foregroundStyle(.primary)
         }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
-}
-
-#Preview {
-    let repo = ConnectorsRepository()
-    let useCase = FetchConnectorsSessionUseCase(repository: repo)
-    ConnectorsHubView(viewModel: ConnectorsHubViewModel(repository: repo, fetchSessionUseCase: useCase))
 }

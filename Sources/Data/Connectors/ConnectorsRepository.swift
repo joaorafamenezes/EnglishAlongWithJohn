@@ -41,15 +41,13 @@ public actor ConnectorsRepository: ConnectorsRepositoryProtocol {
         var filtered: [ConnectorExercise]
         switch config.familyFilter {
         case .all:
-            filtered = allExercises
+            filtered = dataSource.loadExercises().filter { !$0.id.hasPrefix("q-ever-") }
         case .family(let family):
-            filtered = allExercises.filter { $0.family == family }
+            filtered = dataSource.loadExercises().filter { $0.family == family && !$0.id.hasPrefix("q-ever-") }
         case .everFamily:
-            let everIds: Set<String> = ["whatever", "whenever", "wherever", "whoever", "however", "whereas"]
-            filtered = allExercises.filter { exercise in
-                exercise.id.hasPrefix("q-ever-") || everIds.contains(exercise.connectorId)
-            }
+            filtered = dataSource.loadEverExercises()
         }
+
 
         // 2. Filtro de Dominados ("Ocultar itens dominados")
         if config.hideMastered && config.familyFilter != .everFamily {
