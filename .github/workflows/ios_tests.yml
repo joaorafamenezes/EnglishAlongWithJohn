@@ -8,8 +8,8 @@ on:
 
 jobs:
   test:
-    name: Run Unit Tests on iOS Simulator
-    runs-on: macos-14
+    name: Run Unit Tests and Build IPA
+    runs-on: macos-latest
 
     steps:
       - name: Checkout do Repositório

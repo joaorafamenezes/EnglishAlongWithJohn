@@ -275,12 +275,13 @@ public struct PhrasalVerbsHubView: View {
                 .background(Color.appCardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
-            }
-            .onAppear {
-                if currentQuizOptions.isEmpty && !filteredVerbs.isEmpty {
-                    loadCurrentQuizQuestion()
+                .onAppear {
+                    if currentQuizOptions.isEmpty && !filteredVerbs.isEmpty {
+                        loadCurrentQuizQuestion()
+                    }
                 }
             }
+
         }
     }
 
