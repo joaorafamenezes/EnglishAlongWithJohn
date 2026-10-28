@@ -29,6 +29,8 @@ public struct ConnectorsDeckView: View {
         self.repository = repository
     }
 
+    // MARK: - Cálculos de Progresso e Métricas
+
     private var masteredCount: Int {
         allConnectors.filter { masteredIds.contains($0.id) }.count
     }
@@ -37,9 +39,27 @@ public struct ConnectorsDeckView: View {
         allConnectors.count
     }
 
+    private var unmasteredCount: Int {
+        max(0, totalCount - masteredCount)
+    }
+
     private var masteryPercentage: Int {
         guard totalCount > 0 else { return 0 }
         return Int((Double(masteredCount) / Double(totalCount)) * 100)
+    }
+
+    private func progressWidth(totalWidth: CGFloat) -> CGFloat {
+        guard totalCount > 0 else { return 0 }
+        let ratio = CGFloat(masteredCount) / CGFloat(totalCount)
+        return totalWidth * min(1.0, max(0.0, ratio))
+    }
+
+    private func categoryCount(for family: ConnectorFamily) -> Int {
+        allConnectors.filter { $0.family == family }.count
+    }
+
+    private func categoryMasteredCount(for family: ConnectorFamily) -> Int {
+        allConnectors.filter { $0.family == family && masteredIds.contains($0.id) }.count
     }
 
     private var filteredConnectors: [Connector] {
@@ -155,7 +175,7 @@ public struct ConnectorsDeckView: View {
 
                         Capsule()
                             .fill(Color.green)
-                            .frame(width: geo.size.width * CGFloat(Double(masteredCount) / Double(max(1, totalCount))), height: 8)
+                            .frame(width: progressWidth(totalWidth: geo.size.width), height: 8)
                     }
                 }
                 .frame(height: 8)
@@ -196,14 +216,14 @@ public struct ConnectorsDeckView: View {
     private var statusSelectorSection: some View {
         HStack(spacing: 8) {
             statusPill(
-                title: "Todos (\(allConnectors.count))",
+                title: "Todos (\(totalCount))",
                 isSelected: filterMastery == .all
             ) {
                 filterMastery = .all
             }
 
             statusPill(
-                title: "Ainda Estudando (\(allConnectors.count - masteredCount))",
+                title: "Ainda Estudando (\(unmasteredCount))",
                 isSelected: filterMastery == .learning
             ) {
                 filterMastery = .learning
@@ -241,18 +261,15 @@ public struct ConnectorsDeckView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 categoryChip(
-                    title: "Todos (\(allConnectors.count))",
+                    title: "Todos (\(totalCount))",
                     isSelected: selectedFamily == nil
                 ) {
                     selectedFamily = nil
                 }
 
                 ForEach(ConnectorFamily.allCases, id: \.self) { family in
-                    let count = allConnectors.filter { $0.family == family }.count
-                    let mastered = allConnectors.filter { $0.family == family && masteredIds.contains($0.id) }.count
-
                     categoryChip(
-                        title: "\(family.displayName) \(mastered)/\(count)",
+                        title: "\(family.displayName) \(categoryMasteredCount(for: family))/\(categoryCount(for: family))",
                         isSelected: selectedFamily == family
                     ) {
                         selectedFamily = family
