@@ -29,7 +29,7 @@ public struct ConnectorsDeckView: View {
         self.repository = repository
     }
 
-    // MARK: - Cálculos de Progresso e Métricas
+    // MARK: - Métricas de Progresso
 
     private var masteredCount: Int {
         allConnectors.filter { masteredIds.contains($0.id) }.count
@@ -46,20 +46,6 @@ public struct ConnectorsDeckView: View {
     private var masteryPercentage: Int {
         guard totalCount > 0 else { return 0 }
         return Int((Double(masteredCount) / Double(totalCount)) * 100)
-    }
-
-    private func progressWidth(totalWidth: CGFloat) -> CGFloat {
-        guard totalCount > 0 else { return 0 }
-        let ratio = CGFloat(masteredCount) / CGFloat(totalCount)
-        return totalWidth * min(1.0, max(0.0, ratio))
-    }
-
-    private func categoryCount(for family: ConnectorFamily) -> Int {
-        allConnectors.filter { $0.family == family }.count
-    }
-
-    private func categoryMasteredCount(for family: ConnectorFamily) -> Int {
-        allConnectors.filter { $0.family == family && masteredIds.contains($0.id) }.count
     }
 
     private var filteredConnectors: [Connector] {
@@ -94,19 +80,33 @@ public struct ConnectorsDeckView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                // Header com Título e Barra de Progresso Geral
-                headerProgressSection
+                // Header com Progresso Geral
+                DeckHeaderProgressView(
+                    masteredCount: masteredCount,
+                    totalCount: totalCount,
+                    percentage: masteryPercentage
+                )
 
-                // Campo de Busca
-                searchBarSection
+                // Barra de Busca
+                DeckSearchBarView(searchText: $searchText)
 
                 // Seletor de Status (Todos, Estudando, Dominados)
-                statusSelectorSection
+                DeckStatusFilterBar(
+                    selectedFilter: $filterMastery,
+                    totalCount: totalCount,
+                    unmasteredCount: unmasteredCount,
+                    masteredCount: masteredCount
+                )
 
-                // Filtros de Categoria (com contadores individuais)
-                categoryChipsSection
+                // Chips de Categoria
+                DeckCategoryFilterBar(
+                    selectedFamily: $selectedFamily,
+                    totalCount: totalCount,
+                    allConnectors: allConnectors,
+                    masteredIds: masteredIds
+                )
 
-                // Contagem de Conectivos Encontrados
+                // Contador e Instruções
                 HStack {
                     Text("\(filteredConnectors.count) conectivos encontrados")
                         .font(.footnote)
@@ -118,10 +118,26 @@ public struct ConnectorsDeckView: View {
                 }
                 .padding(.horizontal, 16)
 
-                // Grid dos 81 Flashcards
+                // Flashcards dos 81 Conectivos
                 LazyVStack(spacing: 14) {
                     ForEach(filteredConnectors) { connector in
-                        connectorFlashcard(connector: connector)
+                        ConnectorFlashcardView(
+                            connector: connector,
+                            isFlipped: flippedCardIds.contains(connector.id),
+                            isMastered: masteredIds.contains(connector.id),
+                            onFlip: {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                    if flippedCardIds.contains(connector.id) {
+                                        flippedCardIds.remove(connector.id)
+                                    } else {
+                                        flippedCardIds.insert(connector.id)
+                                    }
+                                }
+                            },
+                            onToggleMastery: {
+                                toggleMastery(for: connector.id)
+                            }
+                        )
                     }
                 }
                 .padding(.horizontal, 16)
@@ -139,10 +155,27 @@ public struct ConnectorsDeckView: View {
         }
     }
 
-    // MARK: - 1. Header com Progresso Geral
+    private func toggleMastery(for connectorId: String) {
+        Task {
+            if let isNowMastered = try? await repository.toggleMasteredId(connectorId) {
+                if isNowMastered {
+                    masteredIds.insert(connectorId)
+                } else {
+                    masteredIds.remove(connectorId)
+                }
+            }
+        }
+    }
+}
 
-    @ViewBuilder
-    private var headerProgressSection: some View {
+// MARK: - 1. Header com Progresso Geral
+
+private struct DeckHeaderProgressView: View {
+    let masteredCount: Int
+    let totalCount: Int
+    let percentage: Int
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Deck de Estudo dos 81 Conectivos")
                 .font(.title3)
@@ -154,20 +187,21 @@ public struct ConnectorsDeckView: View {
                 .foregroundStyle(.secondary)
                 .lineSpacing(2)
 
-            // Barra de Progresso
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text("Progresso Geral")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("\(masteredCount) / \(totalCount) dominados (\(masteryPercentage)%)")
+                    Text("\(masteredCount) / \(totalCount) dominados (\(percentage)%)")
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundStyle(.green)
                 }
 
                 GeometryReader { geo in
+                    let ratio: CGFloat = totalCount > 0 ? CGFloat(masteredCount) / CGFloat(totalCount) : 0
+                    let barWidth: CGFloat = geo.size.width * min(1.0, max(0.0, ratio))
                     ZStack(alignment: .leading) {
                         Capsule()
                             .fill(Color.primary.opacity(0.08))
@@ -175,7 +209,7 @@ public struct ConnectorsDeckView: View {
 
                         Capsule()
                             .fill(Color.green)
-                            .frame(width: progressWidth(totalWidth: geo.size.width), height: 8)
+                            .frame(width: barWidth, height: 8)
                     }
                 }
                 .frame(height: 8)
@@ -186,11 +220,14 @@ public struct ConnectorsDeckView: View {
         }
         .padding(.horizontal, 16)
     }
+}
 
-    // MARK: - 2. Campo de Busca
+// MARK: - 2. Campo de Busca
 
-    @ViewBuilder
-    private var searchBarSection: some View {
+private struct DeckSearchBarView: View {
+    @Binding var searchText: String
+
+    var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
@@ -209,38 +246,46 @@ public struct ConnectorsDeckView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 16)
     }
+}
 
-    // MARK: - 3. Seletor de Status (Todos / Estudando / Dominados)
+// MARK: - 3. Seletor de Status (Todos / Estudando / Dominados)
 
-    @ViewBuilder
-    private var statusSelectorSection: some View {
+private struct DeckStatusFilterBar: View {
+    @Binding var selectedFilter: ConnectorsDeckView.MasteryFilter
+    let totalCount: Int
+    let unmasteredCount: Int
+    let masteredCount: Int
+
+    var body: some View {
         HStack(spacing: 8) {
-            statusPill(
+            DeckStatusPill(
                 title: "Todos (\(totalCount))",
-                isSelected: filterMastery == .all
-            ) {
-                filterMastery = .all
-            }
+                isSelected: selectedFilter == .all,
+                action: { selectedFilter = .all }
+            )
 
-            statusPill(
+            DeckStatusPill(
                 title: "Ainda Estudando (\(unmasteredCount))",
-                isSelected: filterMastery == .learning
-            ) {
-                filterMastery = .learning
-            }
+                isSelected: selectedFilter == .learning,
+                action: { selectedFilter = .learning }
+            )
 
-            statusPill(
+            DeckStatusPill(
                 title: "Dominados ★ (\(masteredCount))",
-                isSelected: filterMastery == .mastered
-            ) {
-                filterMastery = .mastered
-            }
+                isSelected: selectedFilter == .mastered,
+                action: { selectedFilter = .mastered }
+            )
         }
         .padding(.horizontal, 16)
     }
+}
 
-    @ViewBuilder
-    private func statusPill(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+private struct DeckStatusPill: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.caption2)
@@ -248,40 +293,59 @@ public struct ConnectorsDeckView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(isSelected ? Color.blue : Color.appCardBackground)
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
     }
+}
 
-    // MARK: - 4. Categorias com Contadores Individuais
+// MARK: - 4. Categorias com Contadores Individuais
 
-    @ViewBuilder
-    private var categoryChipsSection: some View {
+private struct DeckCategoryFilterBar: View {
+    @Binding var selectedFamily: ConnectorFamily?
+    let totalCount: Int
+    let allConnectors: [Connector]
+    let masteredIds: Set<String>
+
+    private func familyCount(for family: ConnectorFamily) -> Int {
+        allConnectors.filter { $0.family == family }.count
+    }
+
+    private func familyMasteredCount(for family: ConnectorFamily) -> Int {
+        allConnectors.filter { $0.family == family && masteredIds.contains($0.id) }.count
+    }
+
+    var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                categoryChip(
+                DeckCategoryChip(
                     title: "Todos (\(totalCount))",
-                    isSelected: selectedFamily == nil
-                ) {
-                    selectedFamily = nil
-                }
+                    isSelected: selectedFamily == nil,
+                    action: { selectedFamily = nil }
+                )
 
                 ForEach(ConnectorFamily.allCases, id: \.self) { family in
-                    categoryChip(
-                        title: "\(family.displayName) \(categoryMasteredCount(for: family))/\(categoryCount(for: family))",
-                        isSelected: selectedFamily == family
-                    ) {
-                        selectedFamily = family
-                    }
+                    let mastered = familyMasteredCount(for: family)
+                    let total = familyCount(for: family)
+                    DeckCategoryChip(
+                        title: "\(family.displayName) \(mastered)/\(total)",
+                        isSelected: selectedFamily == family,
+                        action: { selectedFamily = family }
+                    )
                 }
             }
             .padding(.horizontal, 16)
         }
     }
+}
 
-    @ViewBuilder
-    private func categoryChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+private struct DeckCategoryChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.caption2)
@@ -289,21 +353,24 @@ public struct ConnectorsDeckView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(isSelected ? Color.orange : Color.appCardBackground)
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
     }
+}
 
-    // MARK: - 5. Flashcard Individual
+// MARK: - 5. Flashcard Individual dos Conectivos
 
-    @ViewBuilder
-    private func connectorFlashcard(connector: Connector) -> some View {
-        let isFlipped = flippedCardIds.contains(connector.id)
-        let isMastered = masteredIds.contains(connector.id)
+private struct ConnectorFlashcardView: View {
+    let connector: Connector
+    let isFlipped: Bool
+    let isMastered: Bool
+    let onFlip: () -> Void
+    let onToggleMastery: () -> Void
 
+    var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header do Card: Número (#01) e Categoria
             HStack {
                 Text("#\(String(format: "%02d", connector.number))")
                     .font(.caption2)
@@ -321,125 +388,15 @@ public struct ConnectorsDeckView: View {
                     .clipShape(Capsule())
             }
 
-            // Frente vs Verso
             if !isFlipped {
-                // FRENTE DO CARD
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(connector.connector)
-                        .font(.title2)
-                        .fontWeight(.heavy)
-                        .foregroundStyle(.primary)
-
-                    Text("Clique para virar e ver regras e exemplos")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                        flippedCardIds.insert(connector.id)
-                    }
-                }
+                ConnectorCardFrontView(term: connector.connector, onFlip: onFlip)
             } else {
-                // VERSO DO CARD (Detalhado)
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(connector.connector)
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.blue)
-                            Text("Tradução: \(connector.translation)")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.primary)
-                        }
-                        Spacer()
-                        Button(action: {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                flippedCardIds.remove(connector.id)
-                            }
-                        }) {
-                            Image(systemName: "arrow.counterclockwise.circle.fill")
-                                .font(.title3)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    Divider()
-
-                    // Regra Gramatical
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Regra de Uso:")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.secondary)
-                        Text(connector.grammarRule)
-                            .font(.footnote)
-                            .foregroundStyle(.primary)
-                    }
-
-                    // Dica / Observação
-                    if !connector.notes.isEmpty {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Dica de Aplicação:")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.orange)
-                            Text(connector.notes)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.orange.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-
-                    // Exemplos Reais
-                    if !connector.examples.isEmpty {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Exemplos em Contexto:")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.secondary)
-                            ForEach(connector.examples, id: \.self) { example in
-                                Text("• \"\(example)\"")
-                                    .font(.caption2)
-                                    .italic()
-                                    .foregroundStyle(.primary.opacity(0.85))
-                            }
-                        }
-                    }
-                }
+                ConnectorCardBackView(connector: connector, onFlipBack: onFlip)
             }
 
             Divider()
 
-            // Botão de Dominado (Estilo do Web Game)
-            Button(action: {
-                toggleMastery(for: connector.id)
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: isMastered ? "star.fill" : "star")
-                        .font(.caption)
-                    Text(isMastered ? "★ Dominado" : "☆ Marcar como dominado")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity)
-                .background(isMastered ? Color.green.opacity(0.18) : Color.appBackground)
-                .foregroundStyle(isMastered ? Color.green : Color.secondary)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(isMastered ? Color.green.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
+            ConnectorMasteryButton(isMastered: isMastered, action: onToggleMastery)
         }
         .padding(14)
         .background(Color.appCardBackground)
@@ -449,16 +406,125 @@ public struct ConnectorsDeckView: View {
                 .stroke(isMastered ? Color.green.opacity(0.4) : Color.clear, lineWidth: 1.5)
         )
     }
+}
 
-    private func toggleMastery(for connectorId: String) {
-        Task {
-            if let isNowMastered = try? await repository.toggleMasteredId(connectorId) {
-                if isNowMastered {
-                    masteredIds.insert(connectorId)
-                } else {
-                    masteredIds.remove(connectorId)
+private struct ConnectorCardFrontView: View {
+    let term: String
+    let onFlip: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(term)
+                .font(.title2)
+                .fontWeight(.heavy)
+                .foregroundStyle(.primary)
+
+            Text("Clique para virar e ver regras e exemplos")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onFlip)
+    }
+}
+
+private struct ConnectorCardBackView: View {
+    let connector: Connector
+    let onFlipBack: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(connector.connector)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.blue)
+                    Text("Tradução: \(connector.translation)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                }
+                Spacer()
+                Button(action: onFlipBack) {
+                    Image(systemName: "arrow.counterclockwise.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Regra de Uso:")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.secondary)
+                Text(connector.grammarRule)
+                    .font(.footnote)
+                    .foregroundStyle(.primary)
+            }
+
+            if !connector.notes.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Dica de Aplicação:")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.orange)
+                    Text(connector.notes)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.orange.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
+            if !connector.examples.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Exemplos em Contexto:")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.secondary)
+                    ForEach(connector.examples, id: \.self) { example in
+                        Text("• \"\(example)\"")
+                            .font(.caption2)
+                            .italic()
+                            .foregroundStyle(.primary.opacity(0.85))
+                    }
                 }
             }
         }
+    }
+}
+
+private struct ConnectorMasteryButton: View {
+    let isMastered: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: isMastered ? "star.fill" : "star")
+                    .font(.caption)
+                Text(isMastered ? "★ Dominado" : "☆ Marcar como dominado")
+                    .font(.caption)
+                    .fontWeight(.bold)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(isMastered ? Color.green.opacity(0.18) : Color.appBackground)
+            .foregroundStyle(isMastered ? Color.green : Color.secondary)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isMastered ? Color.green.opacity(0.5) : Color.primary.opacity(0.1), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
