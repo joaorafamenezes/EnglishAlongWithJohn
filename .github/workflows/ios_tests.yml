@@ -66,3 +66,27 @@ jobs:
           name: EnglishAlongWithJohn-Simulator
           path: build/Build/Products/Debug-iphonesimulator/EnglishAlongWithJohn.app
           retention-days: 7
+
+      - name: Compilar IPA para iPhone Físico (Dispositivo Real)
+        run: |
+          xcodebuild build \
+            -project EnglishAlongWithJohn.xcodeproj \
+            -scheme EnglishAlongWithJohn \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            -derivedDataPath build-device
+
+          mkdir -p Payload
+          cp -r build-device/Build/Products/Release-iphoneos/EnglishAlongWithJohn.app Payload/
+          zip -r EnglishAlongWithJohn.ipa Payload
+
+      - name: Disponibilizar IPA para Download (iPhone Físico)
+        uses: actions/upload-artifact@v4
+        with:
+          name: EnglishAlongWithJohn-Device-IPA
+          path: EnglishAlongWithJohn.ipa
+          retention-days: 7
+

@@ -7,15 +7,17 @@ Aplicativo mobile nativo em **SwiftUI** e **Swift 6.0** para iOS 17+, focado no 
 
 ---
 
-## 📱 Como Executar e Testar no Windows
+## 📱 Como Testar o App (Direto no seu iPhone ou no Navegador)
 
-Como o projeto é nativo em **iOS (Swift 6 / SwiftUI)** e requer ambiente Apple, disponibilizamos duas formas para testar no Windows:
+Como o projeto é nativo em **iOS (Swift 6 / SwiftUI)** e o desenvolvimento está sendo feito no Windows, disponibilizamos as melhores alternativas para compilar e testar:
 
-1. 🌐 **Via Navegador com Appetize.io (Recomendado - Sem Mac e Sem Instalação):**  
+1. 📱 **No seu iPhone Físico (Recomendado - 100% Gratuito e Ilimitado):**  
+   Instale o aplicativo nativo direto no seu aparelho via USB usando sua conta gratuita da Apple.  
+   👉 **[Guia Passo a Passo: Testar no iPhone Físico via Sideloadly (docs/TESTAR_NO_IPHONE_FISICO.md)](docs/TESTAR_NO_IPHONE_FISICO.md)**
+
+2. 🌐 **Via Navegador com Appetize.io (Sem cabos e sem instalação):**  
+   Execute o simulador interativo de iPhone direto no seu navegador.  
    👉 **[Guia Passo a Passo: Testar no Appetize.io via GitHub Actions (docs/TESTAR_NO_APPETIZE.md)](docs/TESTAR_NO_APPETIZE.md)**
-
-2. 💻 **Via Máquina Virtual macOS Local:**  
-   👉 **[Guia de Emulação com macOS VM no Windows (docs/EMULAR_IPHONE_WINDOWS.md)](docs/EMULAR_IPHONE_WINDOWS.md)**
 
 
 ---
