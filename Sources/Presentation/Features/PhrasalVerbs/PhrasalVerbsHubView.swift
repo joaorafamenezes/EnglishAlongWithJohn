@@ -233,9 +233,9 @@ private struct PhrasalVerbQuizSectionView: View {
 
                     // 4 Opções
                     VStack(spacing: 8) {
-                        ForEach(q.options) { option in
-                            let isSelected = selectedOptionId == option.id
-                            let isCorrect = option.id == q.correctOptionId
+                        ForEach(q.options, id: \.id) { (option: QuestionOption) in
+                            let isSelected: Bool = selectedOptionId == option.id
+                            let isCorrect: Bool = option.id == q.correctOptionId
 
                             Button(action: {
                                 handleOptionTap(optionId: option.id, correctId: q.correctOptionId)

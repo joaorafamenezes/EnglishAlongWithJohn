@@ -5,6 +5,16 @@
 
 import Foundation
 
+public struct QuestionOption: Identifiable, Sendable, Equatable, Hashable {
+    public let id: String
+    public let text: String
+
+    public init(id: String, text: String) {
+        self.id = id
+        self.text = text
+    }
+}
+
 public struct PhrasalVerbQuizQuestion: Identifiable, Sendable, Equatable {
     public let id: String
     public let prompt: String
