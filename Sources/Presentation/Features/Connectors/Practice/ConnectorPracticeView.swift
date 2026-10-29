@@ -310,12 +310,23 @@ public struct ConnectorPracticeView: View {
 
             Divider()
 
-            // Frase Completa Traduzida
-            VStack(alignment: .leading, spacing: 4) {
-                Text(result.exercise.fullSentence)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
+            // Frase Completa Traduzida com Áudio Nativo
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .top, spacing: 8) {
+                    Button(action: {
+                        SpeechSynthesizerService.shared.speak(result.exercise.fullSentence)
+                    }) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.plain)
+
+                    Text(result.exercise.fullSentence)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+                }
 
                 Text(result.exercise.sentenceTranslation)
                     .font(.caption)

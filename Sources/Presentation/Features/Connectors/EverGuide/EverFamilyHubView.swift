@@ -111,14 +111,25 @@ private struct EverExerciseCardView: View {
 
                 Spacer()
 
-                Text(exercise.connectorTerm)
-                    .font(.caption2)
-                    .fontWeight(.bold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.teal.opacity(0.12))
-                    .foregroundStyle(.teal)
-                    .clipShape(Capsule())
+                HStack(spacing: 6) {
+                    Button(action: {
+                        SpeechSynthesizerService.shared.speak(exercise.connectorTerm)
+                    }) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.teal)
+                    }
+                    .buttonStyle(.plain)
+
+                    Text(exercise.connectorTerm)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.teal.opacity(0.12))
+                        .foregroundStyle(.teal)
+                        .clipShape(Capsule())
+                }
             }
 
             // Prompt
@@ -175,9 +186,20 @@ private struct EverExerciseCardView: View {
                             .fontWeight(.bold)
                     }
 
-                    Text("Tradução: \"\(exercise.sentenceTranslation)\"")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    HStack(alignment: .top, spacing: 6) {
+                        Button(action: {
+                            SpeechSynthesizerService.shared.speak(exercise.fullSentence)
+                        }) {
+                            Image(systemName: "speaker.wave.1.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.teal)
+                        }
+                        .buttonStyle(.plain)
+
+                        Text("Tradução: \"\(exercise.sentenceTranslation)\"")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
 
                     Text(exercise.explanation)
                         .font(.caption2)

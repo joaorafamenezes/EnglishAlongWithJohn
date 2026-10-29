@@ -43,25 +43,37 @@ public enum PhrasalVerbMasker {
             }
         }
 
-        // 3. Casos separáveis ou com pronome/objeto intermediário (ex: "turned it down", "figured it out")
-        let formsPattern = (inflections + [cleanVerb])
-            .map { NSRegularExpression.escapedPattern(for: $0) }
-            .joined(separator: "|")
-        let particlePattern = NSRegularExpression.escapedPattern(for: cleanParticle)
-        let regexPattern = "\\b(\(formsPattern))\\s+([a-zA-Z0-9_'\\-]+)\\s+(\(particlePattern))\\b"
+        // 3. Casos separáveis ou com pronome/objeto intermediário (ex: "turned it down", "put my name down")
+        if !cleanParticle.isEmpty {
+            let formsPattern = (inflections + [cleanVerb])
+                .map { NSRegularExpression.escapedPattern(for: $0) }
+                .joined(separator: "|")
+            let particlePattern = NSRegularExpression.escapedPattern(for: cleanParticle)
+            let regexPattern = "\\b(\(formsPattern))\\s+([a-zA-Z0-9_'\\-\\s]{1,30}?)\\s+(\(particlePattern))\\b"
 
-        if let regex = try? NSRegularExpression(pattern: regexPattern, options: .caseInsensitive),
-           let match = regex.firstMatch(in: sentence, range: NSRange(sentence.startIndex..., in: sentence)),
-           let matchRange = Range(match.range, in: sentence) {
-            return sentence.replacingCharacters(in: matchRange, with: "_____")
-        }
+            if let regex = try? NSRegularExpression(pattern: regexPattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: sentence, range: NSRange(sentence.startIndex..., in: sentence)),
+               let matchRange = Range(match.range, in: sentence) {
+                return sentence.replacingCharacters(in: matchRange, with: "_____")
+            }
 
-        // 4. Fallback: qualquer palavra seguida pela partícula
-        let fallbackPattern = "\\b\\w+\\s+\(particlePattern)\\b"
-        if let fallbackRegex = try? NSRegularExpression(pattern: fallbackPattern, options: .caseInsensitive),
-           let match = fallbackRegex.firstMatch(in: sentence, range: NSRange(sentence.startIndex..., in: sentence)),
-           let matchRange = Range(match.range, in: sentence) {
-            return sentence.replacingCharacters(in: matchRange, with: "_____")
+            // 4. Fallback: qualquer palavra seguida pela partícula
+            let fallbackPattern = "\\b\\w+\\s+\(particlePattern)\\b"
+            if let fallbackRegex = try? NSRegularExpression(pattern: fallbackPattern, options: .caseInsensitive),
+               let match = fallbackRegex.firstMatch(in: sentence, range: NSRange(sentence.startIndex..., in: sentence)),
+               let matchRange = Range(match.range, in: sentence) {
+                return sentence.replacingCharacters(in: matchRange, with: "_____")
+            }
+        } else {
+            // Partícula vazia: mascarar apenas o verbo ou suas formas
+            for form in inflections {
+                let pattern = "\\b\(NSRegularExpression.escapedPattern(for: form))\\b"
+                if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+                   let match = regex.firstMatch(in: sentence, range: NSRange(sentence.startIndex..., in: sentence)),
+                   let matchRange = Range(match.range, in: sentence) {
+                    return sentence.replacingCharacters(in: matchRange, with: "_____")
+                }
+            }
         }
 
         return sentence
@@ -73,6 +85,7 @@ public enum PhrasalVerbMasker {
 
         // Dicionário de verbos irregulares e comuns do catálogo
         let irregulars: [String: [String]] = [
+            "be": ["is", "are", "was", "were", "been", "being", "am"],
             "figure": ["figured", "figures", "figuring"],
             "carry": ["carried", "carries", "carrying"],
             "come": ["came", "comes", "coming"],

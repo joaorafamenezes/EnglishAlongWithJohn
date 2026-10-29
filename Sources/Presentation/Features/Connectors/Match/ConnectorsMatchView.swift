@@ -212,17 +212,26 @@ public struct ConnectorsMatchView: View {
         // Se é a primeira peça do par
         guard let first = selectedTile else {
             selectedTile = tile
+            if tile.lang == .english {
+                SpeechSynthesizerService.shared.speak(tile.text)
+            }
             return
         }
 
         // Se tocou em duas peças do mesmo idioma, troca a seleção
         if first.lang == tile.lang {
             selectedTile = tile
+            if tile.lang == .english {
+                SpeechSynthesizerService.shared.speak(tile.text)
+            }
             return
         }
 
         // Verifica se formam o par correto
         if first.pairId == tile.pairId {
+            let englishText = first.lang == .english ? first.text : tile.text
+            SpeechSynthesizerService.shared.speak(englishText)
+
             withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                 matchedPairIds.insert(tile.pairId)
                 selectedTile = nil

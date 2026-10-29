@@ -5,179 +5,214 @@
 
 import SwiftUI
 
-/// Tela Principal e Hub do Jogo de Phrasal Verbs.
+/// Hub e Game Completo dos Phrasal Verbs (A1 a B2).
+/// Fiel à aplicação web (Connectors in English), contendo:
+/// 1. Desafio das Frases (Quiz de Lacunas nos modos Zen e Arcade)
+/// 2. Match Rápido (Associação por tempo e streaks)
+/// 3. Dicionário dos 108 Cards Interativos com Áudio Nativo e Maestria
 public struct PhrasalVerbsHubView: View {
     @State private var selectedSubMode: SubMode = .quiz
-    @State private var phrasalVerbs: [PhrasalVerb] = []
+    @State private var allVerbs: [PhrasalVerb] = []
     @State private var masteredIds: Set<String> = []
     @State private var selectedLevel: PhrasalVerbLevel = .all
-
-    // Estados do Quiz
-    @State private var quizIndex: Int = 0
-    @State private var quizScore: Int = 0
-    @State private var quizStreak: Int = 0
-    @State private var quizLives: Int = 3
-    @State private var quizSelectedOption: String? = nil
-    @State private var quizFeedbackRevealed: Bool = false
-    @State private var isArcade: Bool = false
-    @State private var currentQuizOptions: [String] = []
-
-    // Estados do Match
-    @State private var matchTiles: [MatchTile] = []
-    @State private var matchSelectedTile: MatchTile? = nil
-    @State private var matchMatchedPairs: Set<String> = []
-    @State private var matchFailedTiles: Set<String> = []
-    @State private var matchRoundsWon: Int = 0
 
     private let dataSource = LocalPhrasalVerbsDataSource()
 
     public enum SubMode: String, CaseIterable, Identifiable {
         case quiz = "Desafio das Frases"
         case match = "Match Rápido"
-        case deck = "Deck Didático"
+        case deck = "Deck dos 108 Verbos"
 
         public var id: String { rawValue }
     }
 
     public init() {}
 
-    private var filteredVerbs: [PhrasalVerb] {
-        if selectedLevel == .all {
-            return phrasalVerbs
-        }
-        return phrasalVerbs.filter { $0.level == selectedLevel }
-    }
-
     public var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Header Temático
-                headerView
+            VStack(spacing: 18) {
+                // Header com Badge e Ícone
+                PhrasalVerbsHeaderView(totalVerbs: allVerbs.count)
 
-                // Seletor de Modo: Quiz vs Match vs Deck
+                // Seletor de Modo
                 Picker("Sub-modo", selection: $selectedSubMode) {
                     ForEach(SubMode.allCases) { mode in
                         Text(mode.rawValue).tag(mode)
                     }
                 }
                 .pickerStyle(.segmented)
-                .padding(.horizontal)
+                .padding(.horizontal, 16)
 
-                // Conteúdo do Modo Ativo
+                // Visualização do Modo Selecionado
                 switch selectedSubMode {
                 case .quiz:
-                    quizView
+                    PhrasalVerbQuizSectionView(selectedLevel: selectedLevel)
                 case .match:
-                    matchView
+                    PhrasalVerbMatchSectionView(allVerbs: allVerbs, selectedLevel: selectedLevel)
                 case .deck:
-                    deckView
+                    PhrasalVerbDeckSectionView(
+                        allVerbs: allVerbs,
+                        masteredIds: $masteredIds,
+                        selectedLevel: $selectedLevel
+                    )
                 }
             }
-            .padding(.vertical)
+            .padding(.vertical, 14)
         }
         .background(Color.appBackground)
-        .navigationTitle("Phrasal Verbs Game")
+        .navigationTitle("Phrasal Verbs Academy")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            loadInitialData()
-        }
-        .onChange(of: selectedLevel) { _, _ in
-            quizIndex = 0
-            quizFeedbackRevealed = false
-            quizSelectedOption = nil
-            loadCurrentQuizQuestion()
+            allVerbs = dataSource.loadPhrasalVerbs()
+            loadMasteredIds()
         }
     }
 
-    // MARK: - Subviews
+    private func loadMasteredIds() {
+        if let stored = UserDefaults.standard.stringArray(forKey: "mastered_phrasal_verbs") {
+            masteredIds = Set(stored)
+        }
+    }
+}
 
-    @ViewBuilder
-    private var headerView: some View {
+// MARK: - 1. Header do Módulo
+
+private struct PhrasalVerbsHeaderView: View {
+    let totalVerbs: Int
+
+    var body: some View {
         HStack(spacing: 14) {
-            Circle()
-                .fill(LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing))
-                .frame(width: 52, height: 52)
-                .overlay(
-                    Image(systemName: "figure.run.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundStyle(.white)
-                        .padding(8)
-                )
+            ZStack {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 50, height: 50)
+                Image(systemName: "figure.run.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.white)
+            }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Phrasal Verbs Game")
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Phrasal Verbs Academy")
                     .font(.headline)
                     .fontWeight(.bold)
-                Text("\(phrasalVerbs.count) verbos frasais com partículas e contexto real")
-                    .font(.caption)
+                    .foregroundStyle(.primary)
+
+                Text("\(totalVerbs) verbos reais com áudio, match e quiz de preenchimento")
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
 
             Spacer()
         }
-        .padding()
+        .padding(14)
         .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .padding(.horizontal)
+        .padding(.horizontal, 16)
+    }
+}
+
+// MARK: - 2. Sub-Modo: Quiz de Lacunas (Zen & Arcade)
+
+private struct PhrasalVerbQuizSectionView: View {
+    let selectedLevel: PhrasalVerbLevel
+
+    @State private var questions: [PhrasalVerbQuizQuestion] = PhrasalVerbsQuestionsData.questions
+    @State private var currentIndex: Int = 0
+    @State private var isArcade: Bool = false
+    @State private var lives: Int = 3
+    @State private var score: Int = 0
+    @State private var streak: Int = 0
+    @State private var selectedOptionId: String? = nil
+    @State private var isAnswered: Bool = false
+
+    private var filteredQuestions: [PhrasalVerbQuizQuestion] {
+        if selectedLevel == .all {
+            return questions
+        }
+        let list = questions.filter { $0.level == selectedLevel }
+        return list.isEmpty ? questions : list
     }
 
-    // MARK: - Sub-Modo 1: Quiz das Frases
+    private var currentQuestion: PhrasalVerbQuizQuestion? {
+        guard !filteredQuestions.isEmpty else { return nil }
+        return filteredQuestions[currentIndex % filteredQuestions.count]
+    }
 
-    @ViewBuilder
-    private var quizView: some View {
-        VStack(spacing: 16) {
-            // Controles de Modo: Zen vs Arcade
+    var body: some View {
+        VStack(spacing: 14) {
+            // Controles de Modo: Zen vs Arcade e Vidas
             HStack {
                 Button(action: { isArcade = false }) {
                     Label("Modo Zen", systemImage: "leaf.fill")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                         .background(!isArcade ? Color.green : Color.appCardBackground)
                         .foregroundStyle(!isArcade ? .white : .primary)
                         .clipShape(Capsule())
                 }
+                .buttonStyle(.plain)
 
-                Button(action: { isArcade = true }) {
+                Button(action: {
+                    isArcade = true
+                    lives = 3
+                }) {
                     Label("Modo Arcade", systemImage: "bolt.fill")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                         .background(isArcade ? Color.orange : Color.appCardBackground)
                         .foregroundStyle(isArcade ? .white : .primary)
                         .clipShape(Capsule())
                 }
+                .buttonStyle(.plain)
 
                 Spacer()
 
                 if isArcade {
-                    HStack(spacing: 2) {
-                        ForEach(0..<3) { heart in
-                            Image(systemName: heart < quizLives ? "heart.fill" : "heart")
-                                .foregroundStyle(.red)
+                    HStack(spacing: 3) {
+                        ForEach(0..<3) { i in
+                            Image(systemName: i < lives ? "heart.fill" : "heart")
                                 .font(.caption)
+                                .foregroundStyle(.red)
                         }
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
 
-            if !filteredVerbs.isEmpty {
-                let currentItem = filteredVerbs[quizIndex % filteredVerbs.count]
-                let questionSentence = currentItem.maskedSentence
-
+            if let q = currentQuestion {
                 VStack(alignment: .leading, spacing: 14) {
+                    // Header da Questão com Botão de Áudio
                     HStack {
-                        Text("Questão \((quizIndex % filteredVerbs.count) + 1) de \(filteredVerbs.count)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(currentItem.level.rawValue)
+                        Text("Questão \((currentIndex % filteredQuestions.count) + 1) de \(filteredQuestions.count)")
                             .font(.caption2)
-                            .fontWeight(.bold)
+                            .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Button(action: {
+                            SpeechSynthesizerService.shared.speak(q.fullSentence)
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "speaker.wave.2.fill")
+                                Text("Ouvir Frase")
+                            }
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.blue.opacity(0.12))
+                            .foregroundStyle(.blue)
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+
+                        Text(q.level.rawValue)
+                            .font(.system(size: 10, weight: .bold))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
                             .background(Color.orange.opacity(0.15))
@@ -185,302 +220,215 @@ public struct PhrasalVerbsHubView: View {
                             .clipShape(Capsule())
                     }
 
-                    Text(questionSentence)
+                    // Frase com lacuna
+                    Text(q.prompt)
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .lineSpacing(4)
+                        .lineSpacing(3)
+                        .foregroundStyle(.primary)
 
-                    Text("Tradução de apoio: \(currentItem.examplePt)")
+                    Text("Significado: \(q.meaningPt)")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
-                    // Opções fixas durante a exibição da questão
-                    let activeOptions = currentQuizOptions.isEmpty ? generateQuizOptions(correct: currentItem) : currentQuizOptions
+                    // 4 Opções
+                    VStack(spacing: 8) {
+                        ForEach(q.options) { option in
+                            let isSelected = selectedOptionId == option.id
+                            let isCorrect = option.id == q.correctOptionId
 
-                    VStack(spacing: 10) {
-                        ForEach(activeOptions, id: \.self) { option in
                             Button(action: {
-                                handleQuizOptionSelected(option, correct: currentItem.phrasalVerb, activeOptions: activeOptions)
+                                handleOptionTap(optionId: option.id, correctId: q.correctOptionId)
                             }) {
                                 HStack {
-                                    Text(option)
+                                    Text(option.text)
                                         .font(.subheadline)
-                                        .fontWeight(.semibold)
+                                        .fontWeight(.bold)
                                     Spacer()
-                                    if quizFeedbackRevealed {
-                                        if option.lowercased() == currentItem.phrasalVerb.lowercased() {
+                                    if isAnswered {
+                                        if isCorrect {
                                             Image(systemName: "checkmark.circle.fill")
                                                 .foregroundStyle(.green)
-                                        } else if quizSelectedOption == option {
+                                        } else if isSelected {
                                             Image(systemName: "xmark.circle.fill")
                                                 .foregroundStyle(.red)
                                         }
                                     }
                                 }
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(quizOptionBackground(option, correct: currentItem.phrasalVerb))
-                                .foregroundStyle(.primary)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 12)
+                                .background(optionBg(isSelected: isSelected, isCorrect: isCorrect))
+                                .foregroundStyle(isAnswered && (isCorrect || isSelected) ? .white : .primary)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
-                            .disabled(quizFeedbackRevealed)
-                        }
-                    }
-                    .onAppear {
-                        if currentQuizOptions.isEmpty {
-                            currentQuizOptions = activeOptions
+                            .buttonStyle(.plain)
+                            .disabled(isAnswered)
                         }
                     }
 
-                    if quizFeedbackRevealed {
-                        // Explicação pedagógica contextual
-                        VStack(alignment: .leading, spacing: 6) {
+                    // Feedback Pedagógico Completo
+                    if isAnswered {
+                        VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 6) {
-                                Image(systemName: quizSelectedOption?.lowercased() == currentItem.phrasalVerb.lowercased() ? "checkmark.circle.fill" : "info.circle.fill")
-                                    .foregroundStyle(quizSelectedOption?.lowercased() == currentItem.phrasalVerb.lowercased() ? .green : .orange)
-                                Text(quizSelectedOption?.lowercased() == currentItem.phrasalVerb.lowercased() ? "Correto!" : "Resposta correta:")
+                                Image(systemName: selectedOptionId == q.correctOptionId ? "checkmark.circle.fill" : "info.circle.fill")
+                                    .foregroundStyle(selectedOptionId == q.correctOptionId ? .green : .orange)
+                                Text(selectedOptionId == q.correctOptionId ? "Correto!" : "Resposta correta: \(q.phrasalVerb)")
                                     .font(.subheadline)
                                     .fontWeight(.bold)
                             }
 
-                            Text("**\(currentItem.phrasalVerb)**: \(currentItem.meaningPt)")
-                                .font(.footnote)
+                            Text("Tradução: \"\(q.sentenceTranslation)\"")
+                                .font(.caption2)
                                 .foregroundStyle(.secondary)
 
-                            Text("Frase contextual completa: \"\(currentItem.exampleEn)\"")
-                                .font(.caption)
-                                .italic()
-                                .foregroundStyle(.blue)
-                        }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.appCardBackground.opacity(0.85))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                            Text(q.whyCorrect)
+                                .font(.caption2)
+                                .foregroundStyle(.primary)
 
-                        Button(action: advanceQuiz) {
-                            HStack {
-                                Text("Avançar para a próxima")
-                                    .fontWeight(.bold)
-                                Image(systemName: "arrow.right")
+                            if !q.teacherTip.isEmpty {
+                                Text("💡 Dica do Professor: \(q.teacherTip)")
+                                    .font(.caption2)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.orange)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                            Button(action: advance) {
+                                HStack {
+                                    Text("Próxima Frase")
+                                        .fontWeight(.bold)
+                                    Image(systemName: "arrow.right")
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color.blue)
+                                .foregroundStyle(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, 4)
                         }
+                        .padding(14)
+                        .background(Color.blue.opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
-                .padding()
+                .padding(16)
                 .background(Color.appCardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding(.horizontal)
-                .onAppear {
-                    if currentQuizOptions.isEmpty && !filteredVerbs.isEmpty {
-                        loadCurrentQuizQuestion()
-                    }
-                }
+                .padding(.horizontal, 16)
             }
-
         }
     }
 
-    // MARK: - Sub-Modo 2: Match Rápido
+    private func handleOptionTap(optionId: String, correctId: String) {
+        selectedOptionId = optionId
+        isAnswered = true
+        if optionId == correctId {
+            score += 100
+            streak += 1
+        } else {
+            streak = 0
+            if isArcade && lives > 0 {
+                lives -= 1
+            }
+        }
+    }
 
-    @ViewBuilder
-    private var matchView: some View {
+    private func advance() {
+        isAnswered = false
+        selectedOptionId = nil
+        currentIndex += 1
+    }
+
+    private func optionBg(isSelected: Bool, isCorrect: Bool) -> Color {
+        guard isAnswered else { return Color.appBackground }
+        if isCorrect { return Color.green }
+        if isSelected { return Color.red }
+        return Color.appBackground
+    }
+}
+
+// MARK: - 3. Sub-Modo: Match Rápido (Associação)
+
+private struct PhrasalVerbMatchSectionView: View {
+    let allVerbs: [PhrasalVerb]
+    let selectedLevel: PhrasalVerbLevel
+
+    @State private var matchTiles: [MatchTile] = []
+    @State private var selectedTile: MatchTile? = nil
+    @State private var matchedPairIds: Set<String> = []
+    @State private var failedTileIds: Set<String> = []
+    @State private var roundsWon: Int = 0
+
+    var body: some View {
         VStack(spacing: 14) {
             HStack {
-                Text("Associe o Phrasal Verb ao seu significado em português:")
-                    .font(.footnote)
+                Text("Associe o Phrasal Verb ao seu significado:")
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button(action: { startNewMatchRound() }) {
+                Button(action: startRound) {
                     Image(systemName: "arrow.clockwise")
-                        .font(.footnote)
+                        .font(.caption)
                         .foregroundStyle(.blue)
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
 
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 ForEach(matchTiles) { tile in
-                    if !matchMatchedPairs.contains(tile.pairId) {
-                        let isSelected = matchSelectedTile?.id == tile.id
-                        let isFailed = matchFailedTiles.contains(tile.id)
+                    if !matchedPairIds.contains(tile.pairId) {
+                        let isSelected = selectedTile?.id == tile.id
+                        let isFailed = failedTileIds.contains(tile.id)
 
-                        Button(action: { handleMatchTileTap(tile) }) {
+                        Button(action: { handleTileTap(tile) }) {
                             Text(tile.text)
-                                .font(.footnote)
-                                .fontWeight(.semibold)
+                                .font(.caption)
+                                .fontWeight(.bold)
                                 .multilineTextAlignment(.center)
                                 .foregroundStyle(isFailed ? .white : (isSelected ? .white : .primary))
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 64)
+                                .frame(height: 60)
                                 .padding(6)
                                 .background(isFailed ? Color.red : (isSelected ? Color.orange : Color.appCardBackground))
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .buttonStyle(.plain)
                     } else {
-                        Color.clear.frame(height: 64)
+                        Color.clear.frame(height: 60)
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
 
-            if matchMatchedPairs.count == matchTiles.count / 2 && !matchTiles.isEmpty {
+            if matchedPairIds.count == matchTiles.count / 2 && !matchTiles.isEmpty {
                 VStack(spacing: 10) {
                     Text("🎉 Rodada de Phrasal Verbs Concluída!")
                         .font(.headline)
                         .foregroundStyle(.green)
                     Button("Jogar Nova Rodada") {
-                        startNewMatchRound()
+                        startRound()
                     }
                     .buttonStyle(.borderedProminent)
                 }
                 .padding()
             }
         }
-    }
-
-    // MARK: - Sub-Modo 3: Deck Didático
-
-    @ViewBuilder
-    private var deckView: some View {
-        VStack(spacing: 14) {
-            // Seletor de Níveis
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(PhrasalVerbLevel.allCases) { level in
-                        Button(action: { selectedLevel = level }) {
-                            Text(level.rawValue)
-                                .font(.caption)
-                                .fontWeight(selectedLevel == level ? .bold : .regular)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(selectedLevel == level ? Color.orange : Color.appCardBackground)
-                                .foregroundStyle(selectedLevel == level ? .white : .primary)
-                                .clipShape(Capsule())
-                        }
-                    }
-                }
-                .padding(.horizontal)
-            }
-
-            LazyVStack(spacing: 12) {
-                ForEach(filteredVerbs) { verb in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(verb.phrasalVerb)
-                                .font(.headline)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.primary)
-
-                            Spacer()
-
-                            Text(verb.level.rawValue)
-                                .font(.caption2)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
-                                .background(Color.orange.opacity(0.12))
-                                .foregroundStyle(.orange)
-                                .clipShape(Capsule())
-                        }
-
-                        Text("Significado: \(verb.meaningPt)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\"\(verb.exampleEn)\"")
-                                .font(.footnote)
-                                .italic()
-                                .foregroundStyle(.blue)
-                            Text(verb.examplePt)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.blue.opacity(0.06))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .padding(14)
-                    .background(Color.appCardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
-
-    // MARK: - Funções Auxiliares
-
-    private func loadInitialData() {
-        phrasalVerbs = dataSource.loadPhrasalVerbs()
-        loadCurrentQuizQuestion()
-        startNewMatchRound()
-    }
-
-    private func loadCurrentQuizQuestion() {
-        guard !filteredVerbs.isEmpty else {
-            currentQuizOptions = []
-            return
-        }
-        let currentItem = filteredVerbs[quizIndex % filteredVerbs.count]
-        currentQuizOptions = generateQuizOptions(correct: currentItem)
-    }
-
-    private func generateQuizOptions(correct: PhrasalVerb) -> [String] {
-        var options = [correct.phrasalVerb]
-        let otherVerbs = phrasalVerbs.filter { $0.id != correct.id }
-        let distractors = otherVerbs.shuffled().prefix(3).map { $0.phrasalVerb }
-        options.append(contentsOf: distractors)
-        return options.shuffled()
-    }
-
-    private func handleQuizOptionSelected(_ option: String, correct: String, activeOptions: [String]) {
-        if currentQuizOptions.isEmpty {
-            currentQuizOptions = activeOptions
-        }
-        quizSelectedOption = option
-        quizFeedbackRevealed = true
-
-        if option.lowercased() == correct.lowercased() {
-            quizScore += 100
-            quizStreak += 1
-        } else {
-            quizStreak = 0
-            if isArcade && quizLives > 0 {
-                quizLives -= 1
+        .onAppear {
+            if matchTiles.isEmpty {
+                startRound()
             }
         }
     }
 
-    private func advanceQuiz() {
-        quizFeedbackRevealed = false
-        quizSelectedOption = nil
-        quizIndex += 1
-        loadCurrentQuizQuestion()
-    }
+    private func startRound() {
+        selectedTile = nil
+        matchedPairIds.removeAll()
+        failedTileIds.removeAll()
 
-    private func quizOptionBackground(_ option: String, correct: String) -> Color {
-        guard quizFeedbackRevealed else { return Color.appBackground }
-        if option.lowercased() == correct.lowercased() {
-            return Color.green.opacity(0.2)
-        }
-        if quizSelectedOption == option {
-            return Color.red.opacity(0.2)
-        }
-        return Color.appBackground
-    }
-
-    private func startNewMatchRound() {
-        matchSelectedTile = nil
-        matchMatchedPairs.removeAll()
-        matchFailedTiles.removeAll()
-
-        let sample = phrasalVerbs.shuffled().prefix(6)
+        let pool = selectedLevel == .all ? allVerbs : allVerbs.filter { $0.level == selectedLevel }
+        let sample = (pool.isEmpty ? allVerbs : pool).shuffled().prefix(6)
         var newTiles: [MatchTile] = []
         for item in sample {
             newTiles.append(MatchTile(id: "en-\(item.id)", pairId: item.id, text: item.phrasalVerb, lang: .english))
@@ -489,37 +437,249 @@ public struct PhrasalVerbsHubView: View {
         matchTiles = newTiles.shuffled()
     }
 
-    private func handleMatchTileTap(_ tile: MatchTile) {
-        guard matchFailedTiles.isEmpty else { return }
+    private func handleTileTap(_ tile: MatchTile) {
+        guard failedTileIds.isEmpty else { return }
 
-        if matchSelectedTile?.id == tile.id {
-            matchSelectedTile = nil
+        if selectedTile?.id == tile.id {
+            selectedTile = nil
             return
         }
 
-        guard let first = matchSelectedTile else {
-            matchSelectedTile = tile
+        guard let first = selectedTile else {
+            selectedTile = tile
             return
         }
 
         if first.lang == tile.lang {
-            matchSelectedTile = tile
+            selectedTile = tile
             return
         }
 
         if first.pairId == tile.pairId {
-            withAnimation {
-                matchMatchedPairs.insert(tile.pairId)
-                matchSelectedTile = nil
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                matchedPairIds.insert(tile.pairId)
+                selectedTile = nil
+            }
+            if matchedPairIds.count == matchTiles.count / 2 {
+                roundsWon += 1
             }
         } else {
-            matchFailedTiles = [first.id, tile.id]
+            failedTileIds = [first.id, tile.id]
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                 withAnimation {
-                    matchFailedTiles.removeAll()
-                    matchSelectedTile = nil
+                    failedTileIds.removeAll()
+                    selectedTile = nil
                 }
             }
         }
+    }
+}
+
+// MARK: - 4. Sub-Modo: Deck dos 108 Phrasal Verbs
+
+private struct PhrasalVerbDeckSectionView: View {
+    let allVerbs: [PhrasalVerb]
+    @Binding var masteredIds: Set<String>
+    @Binding var selectedLevel: PhrasalVerbLevel
+
+    @State private var searchText: String = ""
+
+    private var filteredList: [PhrasalVerb] {
+        var list = allVerbs
+        if selectedLevel != .all {
+            list = list.filter { $0.level == selectedLevel }
+        }
+        if !searchText.isEmpty {
+            let q = searchText.lowercased()
+            list = list.filter {
+                $0.phrasalVerb.lowercased().contains(q) ||
+                $0.meaningPt.lowercased().contains(q) ||
+                $0.category.lowercased().contains(q) ||
+                $0.meaningEn.lowercased().contains(q)
+            }
+        }
+        return list
+    }
+
+    var body: some View {
+        VStack(spacing: 14) {
+            // Barra de Busca
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                TextField("Buscar phrasal verb, tradução ou categoria...", text: $searchText)
+                    .font(.footnote)
+                    .textFieldStyle(.plain)
+                if !searchText.isEmpty {
+                    Button(action: { searchText = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color.appCardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 16)
+
+            // Filtros de Nível
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(PhrasalVerbLevel.allCases) { level in
+                        Button(action: { selectedLevel = level }) {
+                            Text(level.rawValue)
+                                .font(.caption2)
+                                .fontWeight(selectedLevel == level ? .bold : .regular)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(selectedLevel == level ? Color.orange : Color.appCardBackground)
+                                .foregroundStyle(selectedLevel == level ? .white : .primary)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+
+            // Contador de Verbos
+            HStack {
+                Text("\(filteredList.count) phrasal verbs")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("\(masteredIds.count) dominados ★")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.green)
+            }
+            .padding(.horizontal, 16)
+
+            // Lista de Cards
+            LazyVStack(spacing: 12) {
+                ForEach(filteredList) { verb in
+                    PhrasalVerbCardItemView(
+                        verb: verb,
+                        isMastered: masteredIds.contains(verb.id),
+                        onToggleMastery: {
+                            toggleMastered(verb.id)
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func toggleMastered(_ id: String) {
+        if masteredIds.contains(id) {
+            masteredIds.remove(id)
+        } else {
+            masteredIds.insert(id)
+        }
+        UserDefaults.standard.set(Array(masteredIds), forKey: "mastered_phrasal_verbs")
+    }
+}
+
+private struct PhrasalVerbCardItemView: View {
+    let verb: PhrasalVerb
+    let isMastered: Bool
+    let onToggleMastery: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 8) {
+                        Text(verb.phrasalVerb)
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.primary)
+
+                        Button(action: {
+                            SpeechSynthesizerService.shared.speak(verb.phrasalVerb)
+                        }) {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .font(.caption)
+                                .foregroundStyle(.blue)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Text("Significado: \(verb.meaningPt)")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Text(verb.level.rawValue)
+                    .font(.system(size: 10, weight: .bold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.orange.opacity(0.12))
+                    .foregroundStyle(.orange)
+                    .clipShape(Capsule())
+            }
+
+            if !verb.meaningEn.isEmpty {
+                Text(verb.meaningEn)
+                    .font(.caption2)
+                    .italic()
+                    .foregroundStyle(.secondary)
+            }
+
+            // Exemplos reais
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(verb.examples, id: \.self) { ex in
+                    HStack(alignment: .top, spacing: 6) {
+                        Button(action: {
+                            SpeechSynthesizerService.shared.speak(ex)
+                        }) {
+                            Image(systemName: "speaker.wave.1.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.blue.opacity(0.8))
+                        }
+                        .buttonStyle(.plain)
+
+                        Text("• \"\(ex)\"")
+                            .font(.caption2)
+                            .foregroundStyle(.primary.opacity(0.9))
+                    }
+                }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.blue.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            if !verb.teacherTip.isEmpty {
+                Text("💡 \(verb.teacherTip)")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+            }
+
+            Divider()
+
+            // Botão de Maestria
+            Button(action: onToggleMastery) {
+                HStack(spacing: 6) {
+                    Image(systemName: isMastered ? "star.fill" : "star")
+                        .font(.caption2)
+                    Text(isMastered ? "★ Dominado" : "☆ Marcar como dominado")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                }
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity)
+                .background(isMastered ? Color.green.opacity(0.15) : Color.appBackground)
+                .foregroundStyle(isMastered ? Color.green : Color.secondary)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .background(Color.appCardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

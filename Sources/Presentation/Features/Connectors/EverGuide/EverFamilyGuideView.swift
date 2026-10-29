@@ -86,10 +86,21 @@ public struct EverFamilyGuideView: View {
     private func guideItemCard(item: EverFamilyItem) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(item.word)
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.blue)
+                HStack(spacing: 8) {
+                    Text(item.word)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.blue)
+
+                    Button(action: {
+                        SpeechSynthesizerService.shared.speak(item.word)
+                    }) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 Spacer()
 
@@ -115,9 +126,21 @@ public struct EverFamilyGuideView: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.exampleEn)
-                    .font(.footnote)
-                    .fontWeight(.medium)
+                HStack(alignment: .top, spacing: 6) {
+                    Button(action: {
+                        SpeechSynthesizerService.shared.speak(item.exampleEn)
+                    }) {
+                        Image(systemName: "speaker.wave.1.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.blue.opacity(0.8))
+                    }
+                    .buttonStyle(.plain)
+
+                    Text(item.exampleEn)
+                        .font(.footnote)
+                        .fontWeight(.medium)
+                }
+
                 Text(item.examplePt)
                     .font(.caption)
                     .foregroundStyle(.secondary)

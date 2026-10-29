@@ -436,11 +436,21 @@ private struct ConnectorCardBackView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(connector.connector)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.blue)
+                    HStack(spacing: 8) {
+                        Text(connector.connector)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.blue)
+
+                        Button(action: {
+                            SpeechSynthesizerService.shared.speak(connector.connector)
+                        }) {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .font(.caption)
+                                .foregroundStyle(.blue)
+                        }
+                        .buttonStyle(.plain)
+                    }
                     Text("Tradução: \(connector.translation)")
                         .font(.subheadline)
                         .fontWeight(.medium)
