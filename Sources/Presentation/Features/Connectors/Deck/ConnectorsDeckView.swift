@@ -436,6 +436,7 @@ private struct ConnectorCardBackView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
+                VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
                         Text(connector.connector)
                             .font(.title3)
@@ -451,12 +452,15 @@ private struct ConnectorCardBackView: View {
                         }
                         .buttonStyle(.plain)
                     }
+
                     Text("Tradução: \(connector.translation)")
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.primary)
                 }
+
                 Spacer()
+
                 Button(action: onFlipBack) {
                     Image(systemName: "arrow.counterclockwise.circle.fill")
                         .font(.title3)
